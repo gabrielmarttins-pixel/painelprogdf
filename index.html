@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Painel de Programação</title>
+    <meta name="description" content="Painel de informações para programação" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="display-shell">
+      <section class="display-topbar" aria-label="Data e hora">
+        <span id="display-date">--/--/----</span>
+        <strong id="display-time">--:--:--</strong>
+      </section>
+
+      <section id="display-grid" class="display-grid single-display" aria-live="polite"></section>
+    </main>
+
+    <script src="./config.js?v=8"></script>
+    <script src="./app.js?v=8"></script>
+  </body>
+</html>

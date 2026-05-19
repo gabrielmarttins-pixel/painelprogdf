@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Coordenação | Painel de Programação</title>
+    <meta name="description" content="Entrada de informações do Painel de Programação" />
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body>
+    <main class="coordination-shell">
+      <header class="coordination-header">
+        <img class="brand-mark" src="../assets/PLIMPLIM.png" alt="" aria-hidden="true" />
+        <div>
+          <p class="eyebrow">Painel de Programação</p>
+          <h1>PREVISÃO DE PROGRAMAS</h1>
+        </div>
+        <a class="ghost-link" href="../index.html">Ver painel</a>
+      </header>
+
+      <section class="status-row single-status" aria-label="Status do preenchimento">
+        <div>
+          <span class="status-label">Última atualização</span>
+          <strong id="last-update">Ainda não salvo</strong>
+        </div>
+      </section>
+
+      <form id="coordination-form" class="input-panel">
+        <fieldset class="program-card">
+          <legend>INFORMAÇÕES DO PROGRAMA</legend>
+
+          <label>
+            <span>PROGRAMA</span>
+            <select name="program">
+              <option value="">Selecione</option>
+              <option value="BOM DIA DF">BOM DIA DF</option>
+              <option value="DF1">DF1</option>
+              <option value="GLOBO ESPORTE">GLOBO ESPORTE</option>
+              <option value="DF2">DF2</option>
+              <option value="GLOBO COMUNIDADE">GLOBO COMUNIDADE</option>
+            </select>
+          </label>
+
+          <label>
+            <span>DATA</span>
+            <input name="date" type="date" />
+          </label>
+
+          <label>
+            <span>HORÁRIO</span>
+            <input name="time" type="time" step="1" />
+          </label>
+
+          <label>
+            <span>PRODUÇÃO</span>
+            <input name="production" type="time" step="1" />
+          </label>
+
+          <label>
+            <span>BLOCOS</span>
+            <select name="blocks">
+              <option value="">Selecione</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+              <option value="6">6</option>
+            </select>
+          </label>
+
+          <section class="calls-section wide-field" aria-label="Chamadas">
+            <div class="section-title">
+              <span>CHAMADAS</span>
+              <button class="secondary-button compact-button add-button" type="button" id="add-call" aria-label="Criar mais chamada">+</button>
+            </div>
+            <div id="calls-list" class="calls-list"></div>
+          </section>
+
+          <section class="bulletin-section wide-field" aria-label="Boletim">
+            <div class="section-title">
+              <span>BOLETIM</span>
+            </div>
+            <div class="bulletin-row">
+              <label>
+                <span>ID</span>
+                <input data-bulletin-field="id" placeholder="ID DO BOLETIM" />
+              </label>
+              <label>
+                <span>NOME</span>
+                <input data-bulletin-field="name" placeholder="NOME DO BOLETIM" />
+              </label>
+              <label>
+                <span>DURAÇÃO</span>
+                <input data-bulletin-field="duration" type="time" step="1" />
+              </label>
+              <label>
+                <span>HORÁRIO</span>
+                <input data-bulletin-field="time" type="time" />
+              </label>
+            </div>
+          </section>
+
+          <label class="wide-field">
+            <span>OBSERVAÇÕES</span>
+            <textarea name="notes" rows="5" placeholder="Observações para o painel"></textarea>
+          </label>
+
+          <section class="carousel-input-section wide-field" aria-label="Imagens do carrossel">
+            <div class="section-title">
+              <span>IMAGENS DO CARROSSEL</span>
+              <strong id="carousel-count">0 imagens</strong>
+            </div>
+            <input id="carousel-images" type="file" accept="image/*" multiple />
+            <p class="field-help">Essas imagens aparecem no painel resultante quando o painel é limpo.</p>
+            <div id="carousel-preview" class="carousel-preview" aria-label="Prévia das imagens do carrossel"></div>
+          </section>
+        </fieldset>
+
+        <div class="actions">
+          <button class="secondary-button" type="button" id="clear-panel">Limpar Painel</button>
+          <button class="primary-button" type="submit">Enviar previsão</button>
+        </div>
+      </form>
+    </main>
+
+    <template id="call-template">
+      <div class="call-row">
+        <label>
+          <span>ID</span>
+          <input data-call-field="id" placeholder="ID DA CHAMADA" />
+        </label>
+        <label>
+          <span>NOME</span>
+          <input data-call-field="name" placeholder="NOME DA CHAMADA" />
+        </label>
+        <label>
+          <span>DURAÇÃO</span>
+          <input data-call-field="duration" type="time" step="1" />
+        </label>
+        <label>
+          <span>HORÁRIO</span>
+          <input data-call-field="time" type="time" />
+        </label>
+        <button class="secondary-button icon-button" type="button" data-remove-call aria-label="Remover chamada">X</button>
+      </div>
+    </template>
+
+    <script src="../config.js?v=8"></script>
+    <script src="../app.js?v=8"></script>
+  </body>
+</html>
