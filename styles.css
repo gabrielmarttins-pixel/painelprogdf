@@ -42,6 +42,7 @@ body {
 body:has(.display-shell) {
   height: 100vh;
   overflow: hidden;
+  background-color: #06131f;
   background-position: center;
   background-size: cover;
   background-repeat: no-repeat;

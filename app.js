@@ -103,7 +103,54 @@ function normalizeData(data) {
   };
 }
 
+async function fetchWithTimeout(url, options = {}, timeout = 3000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeout);
+
+  try {
+    return await fetch(url, {
+      ...options,
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function loadApiData() {
+  try {
+    const response = await fetchWithTimeout("/api/state", { cache: "no-store" });
+    if (!response.ok) return null;
+
+    const payload = await response.json();
+    return payload.data ? normalizeData(payload.data) : normalizeData(null);
+  } catch (error) {
+    console.warn(error);
+    return null;
+  }
+}
+
+async function saveApiData(data) {
+  const response = await fetchWithTimeout("/api/state", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    throw new Error(`API save failed: ${response.status}`);
+  }
+}
+
 async function loadData() {
+  const apiData = await loadApiData();
+  if (apiData) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(apiData));
+    return apiData;
+  }
+
   const config = await getSupabaseConfig();
   if (!config) return loadLocalData();
 
@@ -137,10 +184,40 @@ function hasSavedData() {
 
 async function saveData(data) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+
+  try {
+    await saveApiData(data);
+    return;
+  } catch (error) {
+    console.warn(error);
+  }
+
   const config = await getSupabaseConfig();
   if (!config) return;
 
-  const response = await fetch(
+  const payload = JSON.stringify({
+    id: SUPABASE_ROW_ID,
+    data,
+    updated_at: new Date().toISOString(),
+  });
+
+  const updateResponse = await fetch(
+    `${config.url}/rest/v1/panel_state?id=eq.${SUPABASE_ROW_ID}`,
+    {
+      method: "PATCH",
+      headers: {
+        apikey: config.key,
+        Authorization: `Bearer ${config.key}`,
+        "Content-Type": "application/json",
+        Prefer: "return=minimal",
+      },
+      body: payload,
+    },
+  );
+
+  if (updateResponse.ok) return;
+
+  const createResponse = await fetch(
     `${config.url}/rest/v1/panel_state?on_conflict=id`,
     {
       method: "POST",
@@ -148,18 +225,14 @@ async function saveData(data) {
         apikey: config.key,
         Authorization: `Bearer ${config.key}`,
         "Content-Type": "application/json",
-        Prefer: "resolution=merge-duplicates",
+        Prefer: "resolution=merge-duplicates,return=minimal",
       },
-      body: JSON.stringify({
-        id: SUPABASE_ROW_ID,
-        data,
-        updated_at: new Date().toISOString(),
-      }),
+      body: payload,
     },
   );
 
-  if (!response.ok) {
-    throw new Error(`Supabase save failed: ${response.status}`);
+  if (!createResponse.ok) {
+    throw new Error(`Supabase save failed: ${updateResponse.status}/${createResponse.status}`);
   }
 }
 
