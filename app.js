@@ -170,6 +170,11 @@ function formatDateTime(date) {
   }).format(date);
 }
 
+function getTimeFromDateTime(value) {
+  if (!value) return "--:--";
+  return value.split(",").pop().trim();
+}
+
 function normalizeTimeWithSeconds(value) {
   if (!value) return "";
   if (/^\d{2}:\d{2}$/.test(value)) return `${value}:00`;
@@ -253,12 +258,14 @@ function renderCarouselPreview() {
   });
 }
 
+const logoAssetVersion = "20260520d";
+
 const programLogos = {
-  "BOM DIA DF": "assets/BOM DIA DF.png",
-  DF1: "assets/DF1.png",
-  "GLOBO ESPORTE": "assets/GLOBO ESPORTE.png",
-  DF2: "assets/DF2.png",
-  "GLOBO COMUNIDADE": "assets/GLOBO COMUNIDADE.png",
+  "BOM DIA DF": `assets/BOM DIA DF.png?v=${logoAssetVersion}`,
+  DF1: `assets/DF1.png?v=${logoAssetVersion}`,
+  "GLOBO ESPORTE": `assets/GLOBO ESPORTE.png?v=${logoAssetVersion}`,
+  DF2: `assets/DF2.png?v=${logoAssetVersion}`,
+  "GLOBO COMUNIDADE": `assets/GLOBO COMUNIDADE.png?v=${logoAssetVersion}`,
 };
 
 const programBackgrounds = {
@@ -443,6 +450,7 @@ function initDisplay() {
     latestData = data;
     const program = data.program;
     document.body.dataset.background = programBackgrounds[program.program] || "";
+    setText("display-updated-at", `Última atualização: ${getTimeFromDateTime(data.updatedAt)}`);
 
     if (!hasSavedData()) {
       grid.innerHTML = `
@@ -510,7 +518,6 @@ function initDisplay() {
   const tick = () => {
     const now = new Date();
     setText("display-date", new Intl.DateTimeFormat("pt-BR", { dateStyle: "full" }).format(now));
-    setText("display-time", new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" }).format(now));
 
     const countdown = document.getElementById("program-countdown");
     if (countdown) {

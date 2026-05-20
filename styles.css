@@ -437,9 +437,10 @@ textarea:focus {
 .program-logo {
   display: block;
   width: auto;
-  height: clamp(58px, 10vh, 118px);
-  max-width: min(82vw, 860px);
+  height: clamp(82px, 14vh, 170px);
+  max-width: min(88vw, 980px);
   object-fit: contain;
+  filter: drop-shadow(0 10px 22px rgba(0, 0, 0, 0.38));
 }
 
 .program-summary {
