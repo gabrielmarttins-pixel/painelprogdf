@@ -422,7 +422,7 @@ textarea:focus {
 .program-hero {
   display: grid;
   justify-items: center;
-  gap: clamp(6px, 1vh, 10px);
+  gap: clamp(24px, 4vh, 46px);
   padding: 0;
   text-align: center;
 }
@@ -451,6 +451,10 @@ textarea:focus {
   color: var(--muted);
   font-size: clamp(1.2rem, 2vw, 2.05rem);
   font-weight: 800;
+  border: 2px solid rgba(255, 255, 255, 0.82);
+  border-radius: 999px;
+  padding: 0.12em 0.75em;
+  background: rgba(0, 0, 0, 0.12);
 }
 
 .countdown-panel {
@@ -507,7 +511,7 @@ textarea:focus {
   justify-items: stretch;
   text-align: left;
   align-self: stretch;
-  max-height: clamp(148px, 26vh, 230px);
+  max-height: clamp(210px, 34vh, 340px);
   overflow: hidden;
 }
 
@@ -541,7 +545,7 @@ textarea:focus {
   gap: 8px;
   width: fit-content;
   max-width: 100%;
-  max-height: calc((clamp(1rem, 1.55vw, 1.55rem) * 1.25 + 16px) * 4 + 24px);
+  max-height: calc((clamp(1.45rem, 2.25vw, 2.25rem) * 1.25 + 16px) * 6 + 24px);
   overflow-y: auto;
   padding-right: 6px;
   scrollbar-width: thin;

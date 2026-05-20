@@ -176,6 +176,16 @@ function normalizeTimeWithSeconds(value) {
   return value;
 }
 
+function formatDurationMinutesSeconds(value) {
+  if (!value) return "";
+  const parts = value.split(":");
+  const minutes = parts.length === 3 ? Number(parts[1]) : Number(parts[0]);
+  const seconds = parts.length === 3 ? parts[2] : parts[1];
+  if (Number.isNaN(minutes) || !seconds) return value;
+  if (minutes === 0) return `${seconds}"`;
+  return `${minutes}'${seconds}"`;
+}
+
 function getCountdown(dateValue, timeValue) {
   if (!dateValue || !timeValue) return "00:00:00";
 
@@ -516,7 +526,7 @@ function initDisplay() {
 }
 
 function renderBulletin(bulletin) {
-  const hasBulletin = bulletin && (bulletin.id || bulletin.name || bulletin.duration || bulletin.time);
+  const hasBulletin = bulletin && bulletin.id;
   if (!hasBulletin) return "";
 
   return `
@@ -525,7 +535,7 @@ function renderBulletin(bulletin) {
       <div class="display-call-row bulletin-display-row">
         <span>${escapeHtml(bulletin.id || "-")}</span>
         <strong>${escapeHtml(bulletin.name || "Boletim")}</strong>
-        <span>${escapeHtml(bulletin.duration || "--:--:--")}</span>
+        <span>${escapeHtml(formatDurationMinutesSeconds(bulletin.duration) || "--:--")}</span>
         <span>${escapeHtml(bulletin.time || "--:--")}</span>
       </div>
     </section>
@@ -564,7 +574,7 @@ function renderCalls(calls) {
             <div class="display-call-row">
               <span>${escapeHtml(call.id || "-")}</span>
               <strong>${escapeHtml(call.name || "Chamada")}</strong>
-              <span>${escapeHtml(call.duration || "--:--:--")}</span>
+              <span>${escapeHtml(formatDurationMinutesSeconds(call.duration) || "--:--")}</span>
               <span>${escapeHtml(call.time || "--:--")}</span>
             </div>
           `,
