@@ -1,7 +1,7 @@
 const STORAGE_KEY = "painel-prog-data";
 const SUPABASE_ROW_ID = "current";
+const REMOTE_REFRESH_INTERVAL = 5000;
 let remoteConfigPromise;
-let selectedCarouselImages = [];
 
 const defaultCall = {
   id: "ID DA CHAMADA",
@@ -48,7 +48,7 @@ function loadLocalData() {
       },
       calls: saved.program?.calls?.length ? saved.program.calls : defaults.program.calls,
     },
-    carouselImages: saved.carouselImages || [],
+    carouselImages: [],
     isCleared: Boolean(saved.isCleared),
   };
   } catch {
@@ -98,7 +98,7 @@ function normalizeData(data) {
       },
       calls: data?.program?.calls?.length ? data.program.calls : defaults.program.calls,
     },
-    carouselImages: data?.carouselImages || [],
+    carouselImages: [],
     isCleared: Boolean(data?.isCleared),
   };
 }
@@ -301,36 +301,6 @@ function setText(id, text) {
   if (element) element.textContent = text;
 }
 
-function updateCarouselCount() {
-  setText("carousel-count", `${selectedCarouselImages.length} ${selectedCarouselImages.length === 1 ? "imagem" : "imagens"}`);
-  renderCarouselPreview();
-}
-
-function renderCarouselPreview() {
-  const preview = document.getElementById("carousel-preview");
-  if (!preview) return;
-
-  preview.innerHTML = selectedCarouselImages
-    .map(
-      (image, index) => `
-        <div class="carousel-thumb">
-          <img src="${image.src}" alt="${escapeHtml(image.name || "Imagem do carrossel")}" />
-          <button type="button" data-remove-carousel-image="${index}" aria-label="Remover ${escapeHtml(image.name || "imagem")}">X</button>
-          <span>${escapeHtml(image.name || `Imagem ${index + 1}`)}</span>
-        </div>
-      `,
-    )
-    .join("");
-
-  preview.querySelectorAll("[data-remove-carousel-image]").forEach((button) => {
-    button.addEventListener("click", () => {
-      const index = Number(button.dataset.removeCarouselImage);
-      selectedCarouselImages.splice(index, 1);
-      updateCarouselCount();
-    });
-  });
-}
-
 const logoAssetVersion = "20260520d";
 
 const programLogos = {
@@ -379,7 +349,7 @@ function initCoordination() {
     const updated = {
       updatedAt: formatDateTime(new Date()),
       isCleared: false,
-      carouselImages: selectedCarouselImages,
+      carouselImages: [],
       program,
     };
 
@@ -400,12 +370,6 @@ function initCoordination() {
     addCallInput();
   });
 
-  document.getElementById("carousel-images").addEventListener("change", async (event) => {
-    const newImages = await readImageFiles(event.target.files);
-    selectedCarouselImages = [...selectedCarouselImages, ...newImages];
-    event.target.value = "";
-    updateCarouselCount();
-  });
 }
 
 function populateCoordinationForm(form, data) {
@@ -415,8 +379,6 @@ function populateCoordinationForm(form, data) {
     }
   });
   setText("last-update", data.updatedAt || "Ainda não salvo");
-  selectedCarouselImages = data.carouselImages || [];
-  updateCarouselCount();
   renderBulletinInput(data.program.bulletin);
   renderCallInputs(data.program.calls);
 }
@@ -427,7 +389,7 @@ async function clearPanelToCarousel() {
     ...data,
     updatedAt: formatDateTime(new Date()),
     isCleared: true,
-    carouselImages: selectedCarouselImages.length ? selectedCarouselImages : data.carouselImages || [],
+    carouselImages: [],
   };
 
   try {
@@ -435,21 +397,8 @@ async function clearPanelToCarousel() {
     setText("last-update", updated.updatedAt);
   } catch (error) {
     console.error(error);
-    setText("last-update", "Carrossel salvo localmente. Erro ao enviar para a nuvem.");
+    setText("last-update", "Painel limpo localmente. Erro ao enviar para a nuvem.");
   }
-}
-
-function readImageFiles(files) {
-  return Promise.all(
-    [...files].map((file) => {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve({ name: file.name, src: reader.result });
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-    }),
-  );
 }
 
 function renderBulletinInput(bulletin) {
@@ -514,9 +463,6 @@ function initDisplay() {
   const grid = document.getElementById("display-grid");
   if (!grid) return;
   let latestData = loadLocalData();
-  let carouselIndex = 0;
-  let carouselRenderedAt = 0;
-  let lastCarouselSignature = "";
 
   const render = async () => {
     const data = await loadData();
@@ -539,21 +485,12 @@ function initDisplay() {
 
     if (data.isCleared) {
       document.body.dataset.background = "";
-      if (!carouselRenderedAt) carouselRenderedAt = Date.now();
-      const shouldAdvance = Date.now() - carouselRenderedAt >= 10000;
-      if (shouldAdvance) {
-        carouselIndex += 1;
-        carouselRenderedAt = Date.now();
-      }
-      const nextSignature = `${carouselIndex}:${(data.carouselImages || []).map((image) => image.src).join("|")}`;
-      if (shouldAdvance || nextSignature !== lastCarouselSignature || !grid.querySelector(".image-carousel, .carousel-empty")) {
-        grid.innerHTML = renderCarousel(data.carouselImages || [], carouselIndex);
-        lastCarouselSignature = nextSignature;
+      if (!grid.querySelector(".cleared-panel-image")) {
+        grid.innerHTML = renderClearedPanel();
       }
       return;
     }
 
-    lastCarouselSignature = "";
     grid.innerHTML = "";
 
     const card = document.createElement("article");
@@ -601,7 +538,7 @@ function initDisplay() {
 
   render();
   tick();
-  setInterval(render, 1000);
+  setInterval(render, REMOTE_REFRESH_INTERVAL);
   setInterval(tick, 1000);
 }
 
@@ -622,20 +559,10 @@ function renderBulletin(bulletin) {
   `;
 }
 
-function renderCarousel(images, index) {
-  if (!images.length) {
-    return `
-      <div class="carousel-empty">
-        <strong>Painel limpo</strong>
-        <span>Envie imagens no painel de input para exibir o carrossel.</span>
-      </div>
-    `;
-  }
-
-  const image = images[index % images.length];
+function renderClearedPanel() {
   return `
-    <section class="image-carousel" aria-label="Carrossel de imagens">
-      <img class="carousel-image" src="${image.src}" alt="${escapeHtml(image.name || "Imagem do carrossel")}" />
+    <section class="cleared-panel-image" aria-label="Painel limpo">
+      <img src="assets/painel-limpo.jpg?v=20260521" alt="TV Globo DF" />
     </section>
   `;
 }
