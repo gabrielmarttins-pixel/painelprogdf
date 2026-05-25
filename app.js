@@ -119,7 +119,7 @@ async function fetchWithTimeout(url, options = {}, timeout = 3000) {
 
 async function loadApiData() {
   try {
-    const response = await fetchWithTimeout("/api/state", { cache: "no-store" });
+    const response = await fetchWithTimeout(`/api/state?ts=${Date.now()}`, { cache: "no-store" });
     if (!response.ok) return null;
 
     const payload = await response.json();
@@ -463,66 +463,74 @@ function initDisplay() {
   const grid = document.getElementById("display-grid");
   if (!grid) return;
   let latestData = loadLocalData();
+  let isRendering = false;
 
   const render = async () => {
-    const data = await loadData();
-    latestData = data;
-    const program = data.program;
-    document.body.dataset.background = programBackgrounds[program.program] || "";
-    setText("display-updated-at", `Última atualização: ${getTimeFromDateTime(data.updatedAt)}`);
+    if (isRendering) return;
+    isRendering = true;
+    
+    try {
+      const data = await loadData();
+      latestData = data;
+      const program = data.program;
+      document.body.dataset.background = programBackgrounds[program.program] || "";
+      setText("display-updated-at", `Última atualização: ${getTimeFromDateTime(data.updatedAt)}`);
 
-    if (!hasSavedData()) {
-      grid.innerHTML = `
-        <div class="empty-state">
-          <div>
-            <div class="loader"></div>
-            <p>Carregando...</p>
+      if (!hasSavedData()) {
+        grid.innerHTML = `
+          <div class="empty-state">
+            <div>
+              <div class="loader"></div>
+              <p>Carregando...</p>
+            </div>
           </div>
-        </div>
-      `;
-      return;
-    }
-
-    if (data.isCleared) {
-      document.body.dataset.background = "";
-      if (!grid.querySelector(".cleared-panel-image")) {
-        grid.innerHTML = renderClearedPanel();
+        `;
+        return;
       }
-      return;
-    }
 
-    grid.innerHTML = "";
+      if (data.isCleared) {
+        document.body.dataset.background = "";
+        if (!grid.querySelector(".cleared-panel-image")) {
+          grid.innerHTML = renderClearedPanel();
+        }
+        return;
+      }
 
-    const card = document.createElement("article");
-    card.className = "display-card program-display-card";
-    card.innerHTML = `
-      <section class="program-hero" aria-label="Informações do programa">
-        <div class="program-summary">
-          <span>PRODUÇÃO: ${escapeHtml(program.production || "Não informado")}</span>
-          <span aria-hidden="true">|</span>
-          <span>BLOCOS: ${escapeHtml(program.blocks || "Não informado")}</span>
-        </div>
-        ${renderProgramLogo(program.program)}
-      </section>
-      <section class="countdown-panel" aria-label="Contagem regressiva">
-        <span class="card-meta">${escapeHtml(normalizeTimeWithSeconds(program.time) || "--:--:--")}</span>
-        <strong id="program-countdown" data-state="${escapeHtml(getCountdownState(program.date, program.time))}">${escapeHtml(getCountdown(program.date, program.time))}</strong>
-      </section>
-      <div class="display-bottom">
-        <div class="calls-stack">
-          ${renderBulletin(program.bulletin)}
-          <section class="display-section calls-display-section" aria-label="Chamadas">
-            <h2>CHAMADAS</h2>
-            ${renderCalls(program.calls)}
+      grid.innerHTML = "";
+
+      const card = document.createElement("article");
+      card.className = "display-card program-display-card";
+      card.innerHTML = `
+        <section class="program-hero" aria-label="Informações do programa">
+          <div class="program-summary">
+            <span>PRODUÇÃO: ${escapeHtml(program.production || "Não informado")}</span>
+            <span aria-hidden="true">|</span>
+            <span>BLOCOS: ${escapeHtml(program.blocks || "Não informado")}</span>
+          </div>
+          ${renderProgramLogo(program.program)}
+        </section>
+        <section class="countdown-panel" aria-label="Contagem regressiva">
+          <span class="card-meta">${escapeHtml(normalizeTimeWithSeconds(program.time) || "--:--:--")}</span>
+          <strong id="program-countdown" data-state="${escapeHtml(getCountdownState(program.date, program.time))}">${escapeHtml(getCountdown(program.date, program.time))}</strong>
+        </section>
+        <div class="display-bottom">
+          <div class="calls-stack">
+            ${renderBulletin(program.bulletin)}
+            <section class="display-section calls-display-section" aria-label="Chamadas">
+              <h2>CHAMADAS</h2>
+              ${renderCalls(program.calls)}
+            </section>
+          </div>
+          <section class="display-section observations-section" aria-label="Observações">
+            <h2>OBSERVAÇÕES</h2>
+            <strong>${escapeHtml(program.notes || "Sem observações.")}</strong>
           </section>
         </div>
-        <section class="display-section observations-section" aria-label="Observações">
-          <h2>OBSERVAÇÕES</h2>
-          <strong>${escapeHtml(program.notes || "Sem observações.")}</strong>
-        </section>
-      </div>
-    `;
-    grid.appendChild(card);
+      `;
+      grid.appendChild(card);
+    } finally {
+      isRendering = false;
+    }
   };
 
   const tick = () => {
@@ -540,6 +548,9 @@ function initDisplay() {
   tick();
   setInterval(render, REMOTE_REFRESH_INTERVAL);
   setInterval(tick, 1000);
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) render();
+  });
 }
 
 function renderBulletin(bulletin) {
