@@ -723,6 +723,11 @@ function formatArtworkDuration(value) {
   return `${String(totalMinutes).padStart(2, "0")}'${String(seconds).padStart(2, "0")}\"`;
 }
 
+function formatArtworkProduction(value) {
+  if (!value) return "--:--:--";
+  return normalizeTimeWithSeconds(value) || "--:--:--";
+}
+
 function wrapArtworkText(context, text, maxWidth) {
   const paragraphs = String(text)
     .replace(/\r\n/g, "\n")
@@ -867,7 +872,7 @@ async function generateCoordinationImage(form) {
   drawMetricCard(context, margin, metricsY, cardWidth, 128, 'HOR\u00c1RIO PREVISTO', data.time || '--:--:--', {
     accent: accentMiddle,
   });
-  drawMetricCard(context, margin + cardWidth + cardGap, metricsY, cardWidth, 128, 'PRODU\u00c7\u00c3O', formatArtworkDuration(data.production), {
+  drawMetricCard(context, margin + cardWidth + cardGap, metricsY, cardWidth, 128, 'PRODU\u00c7\u00c3O', formatArtworkProduction(data.production), {
     accent: accentEnd,
   });
   drawMetricCard(context, margin + (cardWidth + cardGap) * 2, metricsY, cardWidth, 128, 'BLOCOS', String(data.blocks || '--').padStart(2, '0'), {
