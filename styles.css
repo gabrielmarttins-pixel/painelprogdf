@@ -304,6 +304,24 @@ textarea:focus {
   background: var(--accent-dark);
 }
 
+.generate-image-button {
+  background: #185a7d;
+  order: -1;
+  margin-right: auto;
+}
+
+.generate-image-button:hover {
+  background: #10435f;
+}
+
+.image-generation-status {
+  min-height: 1.25em;
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  text-align: right;
+}
+
 .secondary-button {
   background: #eeeeee;
   color: var(--ink);

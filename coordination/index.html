@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Coordenação | Painel de Programação</title>
     <meta name="description" content="Entrada de informações do Painel de Programação" />
-    <link rel="stylesheet" href="../styles.css?v=31" />
+    <link rel="stylesheet" href="../styles.css?v=54" />
   </head>
   <body>
     <main class="coordination-shell">
@@ -111,7 +111,9 @@
         <div class="actions">
           <button class="secondary-button" type="button" id="clear-panel">Limpar Painel</button>
           <button class="primary-button" type="submit">Enviar previsão</button>
+          <button class="primary-button generate-image-button" type="button" id="generate-image">Gerar imagem</button>
         </div>
+        <p class="image-generation-status" id="image-generation-status" role="status" aria-live="polite"></p>
       </form>
     </main>
 
@@ -137,7 +139,7 @@
       </div>
     </template>
 
-    <script src="../config.js?v=31"></script>
-    <script src="../app.js?v=31"></script>
+    <script src="../config.js?v=32"></script>
+    <script src="../app.js?v=54"></script>
   </body>
 </html>
