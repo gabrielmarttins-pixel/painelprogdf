@@ -216,6 +216,17 @@ textarea:focus {
   font-weight: 800;
 }
 
+.community-block-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-column: span 2;
+  gap: 14px;
+}
+
+.is-hidden {
+  display: none !important;
+}
+
 .calls-section,
 .bulletin-section {
   display: grid;

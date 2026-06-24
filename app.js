@@ -21,6 +21,8 @@ const defaults = {
     time: "",
     production: "",
     blocks: "",
+    block1: "",
+    block2: "",
     notes: "",
     bulletin: {
       id: "",
@@ -387,6 +389,47 @@ const artworkPalettes = {
   },
 };
 
+function isCommunityProgram(programName) {
+  return programName === "GLOBO COMUNIDADE";
+}
+
+function getProgramBlocksDisplay(program) {
+  if (isCommunityProgram(program?.program)) {
+    const block1 = (program.block1 || "").trim();
+    const block2 = (program.block2 || "").trim();
+    const parts = [];
+    if (block1) parts.push("BLOCO 1: " + block1);
+    if (block2) parts.push("BLOCO 2: " + block2);
+    return parts.length ? parts.join(" | ") : "N\u00e3o informado";
+  }
+
+  return program?.blocks || "N\u00e3o informado";
+}
+
+function getProgramBlocksFromForm(form) {
+  const selectedProgram = form.elements.program.value.trim();
+  if (isCommunityProgram(selectedProgram)) {
+    const block1 = form.elements.block1?.value.trim();
+    const block2 = form.elements.block2?.value.trim();
+    return [block1, block2].filter(Boolean).join(" | ");
+  }
+
+  return form.elements.blocks?.value || "";
+}
+
+function updateProgramBlockFields(form, programName) {
+  const showCommunityBlocks = isCommunityProgram(programName || form.elements.program.value);
+  const blocksCountField = document.querySelector(".blocks-count-field");
+  const communityBlockFields = document.querySelector(".community-block-fields");
+
+  blocksCountField?.classList.toggle("is-hidden", showCommunityBlocks);
+  communityBlockFields?.classList.toggle("is-hidden", !showCommunityBlocks);
+
+  if (showCommunityBlocks && form.elements.blocks) {
+    form.elements.blocks.value = "";
+  }
+}
+
 function renderProgramLogo(programName) {
   const logo = programLogos[programName];
   if (!logo) return `<h1>${escapeHtml(programName || "PROGRAMA")}</h1>`;
@@ -407,6 +450,7 @@ function initCoordination() {
 
   form.elements.program.addEventListener("change", () => {
     const selectedProgram = form.elements.program.value;
+    updateProgramBlockFields(form, selectedProgram);
     if (!selectedProgram) return;
     const draft = currentData?.drafts?.[selectedProgram];
     populateProgramFields(form, draft || defaults.program, selectedProgram);
@@ -473,6 +517,12 @@ function readProgramForm(form) {
     return entry;
   }, {});
   program.time = normalizeTimeWithSeconds(program.time);
+  if (isCommunityProgram(program.program)) {
+    program.blocks = "";
+  } else {
+    program.block1 = "";
+    program.block2 = "";
+  }
   program.bulletin = readBulletinInput();
   program.calls = readCallInputs();
   return program;
@@ -503,7 +553,9 @@ function getCoordinationArtworkData(form) {
     date: form.elements.date.value,
     time: normalizeTimeWithSeconds(form.elements.time.value),
     production: form.elements.production.value,
-    blocks: form.elements.blocks.value,
+    blocks: getProgramBlocksFromForm(form),
+    block1: form.elements.block1?.value.trim() || "",
+    block2: form.elements.block2?.value.trim() || "",
     notes: form.elements.notes.value.trim() ? form.elements.notes.value.trimEnd() : "",
     calls,
   };
@@ -802,6 +854,12 @@ async function generateCoordinationImage(form) {
   }
 
   const width = 1080;
+  const communityBlockRows = isCommunityProgram(data.program)
+    ? [
+        { label: 'BLOCO 1', id: data.block1 },
+        { label: 'BLOCO 2', id: data.block2 },
+      ].filter((block) => block.id)
+    : [];
   const rowCount = Math.max(data.calls.length, 1);
   const estimatedNoteLines = Math.max(
     1,
@@ -810,7 +868,8 @@ async function generateCoordinationImage(form) {
       .split('\n')
       .reduce((total, line) => total + Math.max(1, Math.ceil(line.length / 62)), 0)
   );
-  const height = Math.max(1120, 860 + rowCount * 76 + estimatedNoteLines * 40);
+  const blockRowsHeight = communityBlockRows.length ? 172 + communityBlockRows.length * 76 : 0;
+  const height = Math.max(1120, 860 + blockRowsHeight + rowCount * 76 + estimatedNoteLines * 40);
   const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
@@ -902,11 +961,55 @@ async function generateCoordinationImage(form) {
   drawMetricCard(context, margin + cardWidth + cardGap, metricsY, cardWidth, 128, 'PRODU\u00c7\u00c3O', formatArtworkProduction(data.production), {
     accent: accentEnd,
   });
-  drawMetricCard(context, margin + (cardWidth + cardGap) * 2, metricsY, cardWidth, 128, 'BLOCOS', String(data.blocks || '--').padStart(2, '0'), {
+  const artworkBlocks = isCommunityProgram(data.program)
+    ? String(communityBlockRows.length || 2).padStart(2, '0')
+    : String(data.blocks || '--').padStart(2, '0');
+  drawMetricCard(context, margin + (cardWidth + cardGap) * 2, metricsY, cardWidth, 128, 'BLOCOS', artworkBlocks, {
     accent: accentStart,
   });
 
-  const callsY = metricsY + 178;
+  const tableHeaderHeight = 60;
+  const rowHeight = 76;
+  let callsY = metricsY + 178;
+
+  if (communityBlockRows.length) {
+    drawFittedText(context, 'BLOCOS', margin, callsY, 360, 34, {
+      color: dark,
+      weight: 700,
+      align: 'left',
+      minSize: 26,
+    });
+    strokeRoundRect(context, margin, callsY + 40, contentWidth, 1, 1, 'rgba(23, 54, 77, 0.2)', 1);
+
+    const blockTableY = callsY + 70;
+    const blockColumns = [320, contentWidth - 320];
+    fillRoundRect(context, margin, blockTableY, contentWidth, tableHeaderHeight, 22, accentDark);
+    ['BLOCO', 'ID'].forEach((label, index) => {
+      const columnX = margin + blockColumns.slice(0, index).reduce((total, value) => total + value, 0);
+      drawFittedText(context, label, columnX + blockColumns[index] / 2, blockTableY + tableHeaderHeight / 2, blockColumns[index] - 28, 23, {
+        color: '#ffffff',
+        weight: 700,
+        minSize: 18,
+      });
+    });
+
+    communityBlockRows.forEach((block, rowIndex) => {
+      const y = blockTableY + tableHeaderHeight + rowIndex * rowHeight;
+      fillRoundRect(context, margin, y + 8, contentWidth, rowHeight - 10, 18, rowIndex % 2 ? '#ffffff' : light);
+      drawFittedText(context, block.label, margin + blockColumns[0] / 2, y + rowHeight / 2 + 3, blockColumns[0] - 28, 30, {
+        color: dark,
+        weight: 700,
+        minSize: 22,
+      });
+      drawFittedText(context, block.id, margin + blockColumns[0] + blockColumns[1] / 2, y + rowHeight / 2 + 3, blockColumns[1] - 28, 32, {
+        color: accentMiddle,
+        weight: 700,
+        minSize: 24,
+      });
+    });
+
+    callsY = blockTableY + tableHeaderHeight + communityBlockRows.length * rowHeight + 56;
+  }
   drawFittedText(context, 'CHAMADAS', margin, callsY, 360, 34, {
     color: dark,
     weight: 700,
@@ -918,8 +1021,6 @@ async function generateCoordinationImage(form) {
   const columns = [336, 220, 210, 194];
   const tableX = margin;
   const tableY = callsY + 70;
-  const tableHeaderHeight = 60;
-  const rowHeight = 76;
   fillRoundRect(context, tableX, tableY, contentWidth, tableHeaderHeight, 22, accentDark);
   const headerLabels = ['NOME', 'HOR\u00c1RIO', 'DURA\u00c7\u00c3O', 'ID'];
   let x = tableX;
@@ -1004,6 +1105,7 @@ function populateProgramFields(form, program, selectedProgram) {
       form.elements[field].value = field === "time" ? normalizeTimeWithSeconds(value) : value || "";
     }
   });
+  updateProgramBlockFields(form, normalizedProgram.program);
   renderBulletinInput(normalizedProgram.bulletin);
   renderCallInputs(normalizedProgram.calls);
 }
@@ -1135,7 +1237,7 @@ function initDisplay() {
           <div class="program-summary">
             <span>PRODUÇÃO: ${escapeHtml(program.production || "Não informado")}</span>
             <span aria-hidden="true">|</span>
-            <span>BLOCOS: ${escapeHtml(program.blocks || "Não informado")}</span>
+            <span>BLOCOS: ${escapeHtml(getProgramBlocksDisplay(program))}</span>
           </div>
           ${renderProgramLogo(program.program)}
         </section>

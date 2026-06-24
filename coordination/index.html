@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Coordenação | Painel de Programação</title>
     <meta name="description" content="Entrada de informações do Painel de Programação" />
-    <link rel="stylesheet" href="../styles.css?v=56" />
+    <link rel="stylesheet" href="../styles.css?v=58" />
   </head>
   <body>
     <main class="coordination-shell">
@@ -56,7 +56,7 @@
             <input name="production" type="time" step="1" />
           </label>
 
-          <label>
+          <label class="blocks-count-field">
             <span>BLOCOS</span>
             <select name="blocks">
               <option value="">Selecione</option>
@@ -68,6 +68,17 @@
               <option value="6">6</option>
             </select>
           </label>
+
+          <div class="community-block-fields is-hidden">
+            <label>
+              <span>BLOCO 1</span>
+              <input name="block1" type="text" placeholder="ID DO BLOCO 1" />
+            </label>
+            <label>
+              <span>BLOCO 2</span>
+              <input name="block2" type="text" placeholder="ID DO BLOCO 2" />
+            </label>
+          </div>
 
           <section class="calls-section wide-field" aria-label="Chamadas">
             <div class="section-title">
@@ -140,6 +151,6 @@
     </template>
 
     <script src="../config.js?v=32"></script>
-    <script src="../app.js?v=56"></script>
+    <script src="../app.js?v=58"></script>
   </body>
 </html>
