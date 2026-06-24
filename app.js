@@ -14,6 +14,7 @@ const defaults = {
   updatedAt: "",
   isCleared: false,
   carouselImages: [],
+  drafts: {},
   program: {
     program: "",
     date: "",
@@ -31,6 +32,24 @@ const defaults = {
   },
 };
 
+function normalizeProgramEntry(program) {
+  return {
+    ...defaults.program,
+    ...(program || {}),
+    bulletin: {
+      ...defaults.program.bulletin,
+      ...(program?.bulletin || {}),
+    },
+    calls: program?.calls?.length ? program.calls : defaults.program.calls,
+  };
+}
+
+function normalizeDrafts(drafts) {
+  return Object.fromEntries(
+    Object.entries(drafts || {}).map(([programName, draft]) => [programName, normalizeProgramEntry(draft)]),
+  );
+}
+
 function loadLocalData() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
@@ -39,16 +58,9 @@ function loadLocalData() {
     return {
       ...defaults,
       ...saved,
-      program: {
-        ...defaults.program,
-        ...(saved.program || {}),
-        bulletin: {
-          ...defaults.program.bulletin,
-          ...(saved.program?.bulletin || {}),
-      },
-      calls: saved.program?.calls?.length ? saved.program.calls : defaults.program.calls,
-    },
-    carouselImages: [],
+      program: normalizeProgramEntry(saved.program),
+      drafts: normalizeDrafts(saved.drafts),
+      carouselImages: [],
     isCleared: Boolean(saved.isCleared),
   };
   } catch {
@@ -89,15 +101,8 @@ function normalizeData(data) {
   return {
     ...defaults,
     ...(data || {}),
-    program: {
-      ...defaults.program,
-      ...(data?.program || {}),
-      bulletin: {
-        ...defaults.program.bulletin,
-        ...(data?.program?.bulletin || {}),
-      },
-      calls: data?.program?.calls?.length ? data.program.calls : defaults.program.calls,
-    },
+    program: normalizeProgramEntry(data?.program),
+    drafts: normalizeDrafts(data?.drafts),
     carouselImages: [],
     isCleared: Boolean(data?.isCleared),
   };
@@ -393,33 +398,43 @@ function initCoordination() {
   const form = document.getElementById("coordination-form");
   if (!form) return;
 
+  let currentData = loadLocalData();
+
   loadData().then((data) => {
+    currentData = data;
     populateCoordinationForm(form, data);
+  });
+
+  form.elements.program.addEventListener("change", () => {
+    const selectedProgram = form.elements.program.value;
+    if (!selectedProgram) return;
+    const draft = currentData?.drafts?.[selectedProgram];
+    populateProgramFields(form, draft || defaults.program, selectedProgram);
+    setText("last-update", draft ? "Rascunho carregado para " + selectedProgram : "Novo preenchimento para " + selectedProgram);
   });
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
 
-    const program = Object.keys(defaults.program).reduce((entry, field) => {
-      if (field === "calls" || field === "bulletin") return entry;
-      entry[field] = form.elements[field].value.trim();
-      return entry;
-    }, {});
-    program.time = normalizeTimeWithSeconds(program.time);
-    program.bulletin = readBulletinInput();
-    program.calls = readCallInputs();
+    const program = readProgramForm(form);
+    const drafts = { ...(currentData.drafts || {}) };
+    if (program.program) drafts[program.program] = program;
 
     const updated = {
+      ...currentData,
       updatedAt: formatDateTime(new Date()),
       isCleared: false,
       carouselImages: [],
       program,
+      drafts,
     };
 
     try {
       await saveData(updated);
+      currentData = updated;
       setText("last-update", updated.updatedAt);
     } catch (error) {
+      currentData = updated;
       console.error(error);
       setText("last-update", "Salvo localmente. Erro ao enviar para a nuvem.");
     }
@@ -449,6 +464,18 @@ function initCoordination() {
     }
   });
 
+}
+
+function readProgramForm(form) {
+  const program = Object.keys(defaults.program).reduce((entry, field) => {
+    if (field === "calls" || field === "bulletin") return entry;
+    entry[field] = form.elements[field].value.trim();
+    return entry;
+  }, {});
+  program.time = normalizeTimeWithSeconds(program.time);
+  program.bulletin = readBulletinInput();
+  program.calls = readCallInputs();
+  return program;
 }
 
 function getCoordinationArtworkData(form) {
@@ -966,15 +993,24 @@ async function generateCoordinationImage(form) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-function populateCoordinationForm(form, data) {
-  Object.entries(data.program).forEach(([field, value]) => {
+function populateProgramFields(form, program, selectedProgram) {
+  const normalizedProgram = normalizeProgramEntry({
+    ...program,
+    program: selectedProgram || program?.program || "",
+  });
+
+  Object.entries(normalizedProgram).forEach(([field, value]) => {
     if (field !== "calls" && field !== "bulletin" && form.elements[field]) {
       form.elements[field].value = field === "time" ? normalizeTimeWithSeconds(value) : value || "";
     }
   });
-  setText("last-update", data.updatedAt || "Ainda não salvo");
-  renderBulletinInput(data.program.bulletin);
-  renderCallInputs(data.program.calls);
+  renderBulletinInput(normalizedProgram.bulletin);
+  renderCallInputs(normalizedProgram.calls);
+}
+
+function populateCoordinationForm(form, data) {
+  populateProgramFields(form, data.program, data.program?.program);
+  setText("last-update", data.updatedAt || "Ainda n\u00e3o salvo");
 }
 
 async function clearPanelToCarousel() {
