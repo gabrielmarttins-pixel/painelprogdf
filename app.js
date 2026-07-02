@@ -24,6 +24,7 @@ const defaults = {
     block1: "",
     block2: "",
     notes: "",
+    notesRich: "",
     bulletin: {
       id: "",
       name: "",
@@ -441,6 +442,8 @@ function initCoordination() {
   const form = document.getElementById("coordination-form");
   if (!form) return;
 
+  initNotesEditor(form);
+
   let currentData = loadLocalData();
 
   loadData().then((data) => {
@@ -460,6 +463,7 @@ function initCoordination() {
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
 
+    syncNotesEditor(form, { rewrite: true });
     const program = readProgramForm(form);
     const drafts = { ...(currentData.drafts || {}) };
     if (program.program) drafts[program.program] = program;
@@ -498,6 +502,7 @@ function initCoordination() {
     setText("image-generation-status", "Gerando imagem...");
 
     try {
+      syncNotesEditor(form, { rewrite: true });
       await generateCoordinationImage(form);
       setText("image-generation-status", "Imagem gerada com sucesso.");
     } catch (error) {
@@ -539,7 +544,7 @@ function getCoordinationArtworkData(form) {
   });
   const bulletin = readBulletinInput();
 
-  if (bulletin.id) {
+  if (bulletin.id && program !== "DF2") {
     calls.unshift({
       id: bulletin.id,
       name: bulletin.name || "BOLETIM",
@@ -556,7 +561,9 @@ function getCoordinationArtworkData(form) {
     blocks: getProgramBlocksFromForm(form),
     block1: form.elements.block1?.value.trim() || "",
     block2: form.elements.block2?.value.trim() || "",
+    bulletin,
     notes: form.elements.notes.value.trim() ? form.elements.notes.value.trimEnd() : "",
+    notesRich: form.elements.notesRich?.value || "",
     calls,
   };
 }
@@ -840,6 +847,211 @@ function wrapArtworkText(context, text, maxWidth) {
   return lines.length ? lines : ["Qualquer altera\u00e7\u00e3o ser\u00e1 informada com anteced\u00eancia."];
 }
 
+
+function sanitizeNotesHtml(html) {
+  const template = document.createElement("template");
+  template.innerHTML = html || "";
+  const allowedColors = new Set(["#5d6a72", "#007ed6", "#ff7a00", "#d71964"]);
+
+  function cleanNode(node) {
+    if (node.nodeType === Node.TEXT_NODE) return document.createTextNode(node.textContent || "");
+    if (node.nodeType !== Node.ELEMENT_NODE) return document.createTextNode("");
+
+    const tag = node.tagName.toLowerCase();
+    if (tag === "br") return document.createElement("br");
+
+    const outputTag = tag === "b" || tag === "strong" ? "strong" : tag === "span" || tag === "font" ? "span" : tag === "div" || tag === "p" ? "div" : "span";
+    const output = document.createElement(outputTag);
+
+    if (outputTag === "span") {
+      const color = (node.style?.color || node.getAttribute?.("color") || "").trim().toLowerCase();
+      const hexColor = rgbToHex(color) || color;
+      if (allowedColors.has(hexColor)) output.style.color = hexColor;
+    }
+
+    node.childNodes.forEach((child) => output.appendChild(cleanNode(child)));
+    return output;
+  }
+
+  const fragment = document.createDocumentFragment();
+  template.content.childNodes.forEach((node) => fragment.appendChild(cleanNode(node)));
+  const wrapper = document.createElement("div");
+  wrapper.appendChild(fragment);
+  return wrapper.innerHTML.trim();
+}
+
+function rgbToHex(color) {
+  const match = color.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
+  if (!match) return "";
+  return "#" + match.slice(1, 4).map((part) => Number(part).toString(16).padStart(2, "0")).join("");
+}
+
+function getNotesPlainText(html) {
+  const element = document.createElement("div");
+  element.innerHTML = sanitizeNotesHtml(html);
+  const lines = [""];
+
+  function append(text) {
+    lines[lines.length - 1] += text || "";
+  }
+
+  function newline() {
+    if (lines[lines.length - 1] !== "") lines.push("");
+  }
+
+  function walk(node) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      append(node.textContent || "");
+      return;
+    }
+
+    if (node.nodeType !== Node.ELEMENT_NODE) return;
+
+    const tag = node.tagName.toLowerCase();
+    if (tag === "br") {
+      newline();
+      return;
+    }
+
+    const isBlock = tag === "div" || tag === "p";
+    if (isBlock && lines[lines.length - 1] !== "") newline();
+    node.childNodes.forEach(walk);
+    if (isBlock) newline();
+  }
+
+  element.childNodes.forEach(walk);
+  return lines.join("\n").replace(/[ \t]+$/gm, "").replace(/\n+$/g, "");
+}
+
+function populateNotesEditor(form, program) {
+  const editor = document.getElementById("notes-editor");
+  if (!editor) return;
+  editor.innerHTML = sanitizeNotesHtml(program.notesRich || escapeHtml(program.notes || ""));
+  syncNotesEditor(form);
+}
+
+function syncNotesEditor(form, options = {}) {
+  const editor = document.getElementById("notes-editor");
+  if (!editor) return;
+  const cleanHtml = sanitizeNotesHtml(editor.innerHTML);
+  if (options.rewrite && editor.innerHTML !== cleanHtml) {
+    editor.innerHTML = cleanHtml;
+  }
+  form.elements.notes.value = getNotesPlainText(cleanHtml);
+  if (form.elements.notesRich) form.elements.notesRich.value = cleanHtml;
+}
+
+function initNotesEditor(form) {
+  const editor = document.getElementById("notes-editor");
+  if (!editor) return;
+
+  document.querySelectorAll("[data-notes-command], [data-notes-color]").forEach((button) => {
+    button.addEventListener("click", () => {
+      editor.focus();
+      if (button.dataset.notesCommand === "bold") {
+        document.execCommand("bold", false, null);
+      }
+      if (button.dataset.notesColor) {
+        document.execCommand("foreColor", false, button.dataset.notesColor);
+      }
+      syncNotesEditor(form);
+    });
+  });
+
+  editor.addEventListener("input", () => syncNotesEditor(form));
+  editor.addEventListener("blur", () => syncNotesEditor(form, { rewrite: true }));
+  editor.addEventListener("paste", () => setTimeout(() => syncNotesEditor(form, { rewrite: true }), 0));
+}
+
+function getArtworkNoteSegments(html, fallbackText) {
+  const cleanHtml = sanitizeNotesHtml(html || "");
+  const root = document.createElement("div");
+  root.innerHTML = cleanHtml || escapeHtml(fallbackText || "Qualquer altera\u00e7\u00e3o ser\u00e1 informada com anteced\u00eancia.");
+  const lines = [[]];
+
+  function pushText(text, style) {
+    if (!text) return;
+    lines[lines.length - 1].push({ text, ...style });
+  }
+
+  function newline() {
+    if (lines[lines.length - 1].length) lines.push([]);
+  }
+
+  function walk(node, style = {}) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      pushText(node.textContent || "", style);
+      return;
+    }
+    if (node.nodeType !== Node.ELEMENT_NODE) return;
+
+    const tag = node.tagName.toLowerCase();
+    if (tag === "br") {
+      newline();
+      return;
+    }
+
+    const nextStyle = { ...style };
+    if (tag === "strong" || tag === "b") nextStyle.bold = true;
+    const color = (node.style?.color || node.getAttribute?.("color") || "").trim().toLowerCase();
+    const hexColor = rgbToHex(color) || color;
+    if (hexColor) nextStyle.color = hexColor;
+
+    const startsBlock = tag === "div" || tag === "p";
+    if (startsBlock && lines[lines.length - 1].length) newline();
+    node.childNodes.forEach((child) => walk(child, nextStyle));
+    if (startsBlock) newline();
+  }
+
+  root.childNodes.forEach((node) => walk(node));
+  while (lines.length && !lines[lines.length - 1].length) lines.pop();
+  return lines.length ? lines : [[{ text: fallbackText || "Qualquer altera\u00e7\u00e3o ser\u00e1 informada com anteced\u00eancia." }]];
+}
+
+function wrapArtworkSegments(context, segmentLines, maxWidth) {
+  const wrapped = [];
+  segmentLines.forEach((segments) => {
+    if (!segments.length) {
+      wrapped.push([]);
+      return;
+    }
+    let line = [];
+    let width = 0;
+
+    segments.forEach((segment) => {
+      const parts = String(segment.text).match(/\S+\s*/g) || [segment.text];
+      parts.forEach((part) => {
+        setArtworkFont(context, 30, segment.bold ? 700 : 400);
+        const partWidth = context.measureText(part).width;
+        if (line.length && width + partWidth > maxWidth) {
+          wrapped.push(line);
+          line = [];
+          width = 0;
+        }
+        line.push({ ...segment, text: part });
+        width += partWidth;
+      });
+    });
+
+    if (line.length) wrapped.push(line);
+  });
+  return wrapped.length ? wrapped : [[{ text: "Qualquer altera\u00e7\u00e3o ser\u00e1 informada com anteced\u00eancia." }]];
+}
+
+function drawArtworkRichLines(context, lines, x, y, maxWidth, lineHeight, fallbackColor) {
+  lines.forEach((line, lineIndex) => {
+    let cursorX = x;
+    line.forEach((segment) => {
+      setArtworkFont(context, 30, segment.bold ? 700 : 400);
+      context.fillStyle = segment.color || fallbackColor;
+      context.textAlign = "left";
+      context.textBaseline = "middle";
+      context.fillText(segment.text, cursorX, y + lineIndex * lineHeight);
+      cursorX += context.measureText(segment.text).width;
+    });
+  });
+}
+
 async function generateCoordinationImage(form) {
   const data = getCoordinationArtworkData(form);
   const header = artworkHeaders[data.program] || artworkHeaders.DF1;
@@ -860,6 +1072,14 @@ async function generateCoordinationImage(form) {
         { label: 'BLOCO 2', id: data.block2 },
       ].filter((block) => block.id)
     : [];
+  const df2BulletinRows = data.program === 'DF2' && data.bulletin?.id
+    ? [{
+        name: data.bulletin.name || 'BOLETIM',
+        time: data.bulletin.time,
+        duration: data.bulletin.duration,
+        id: data.bulletin.id,
+      }]
+    : [];
   const rowCount = Math.max(data.calls.length, 1);
   const estimatedNoteLines = Math.max(
     1,
@@ -869,7 +1089,8 @@ async function generateCoordinationImage(form) {
       .reduce((total, line) => total + Math.max(1, Math.ceil(line.length / 62)), 0)
   );
   const blockRowsHeight = communityBlockRows.length ? 172 + communityBlockRows.length * 76 : 0;
-  const height = Math.max(1120, 860 + blockRowsHeight + rowCount * 76 + estimatedNoteLines * 40);
+  const bulletinRowsHeight = df2BulletinRows.length ? 172 + df2BulletinRows.length * 76 : 0;
+  const height = Math.max(1120, 860 + blockRowsHeight + bulletinRowsHeight + rowCount * 76 + estimatedNoteLines * 40);
   const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
@@ -972,6 +1193,9 @@ async function generateCoordinationImage(form) {
   const rowHeight = 76;
   let callsY = metricsY + 178;
 
+  const columns = [336, 220, 210, 194];
+  const tableX = margin;
+
   if (communityBlockRows.length) {
     drawFittedText(context, 'BLOCOS', margin, callsY, 360, 34, {
       color: dark,
@@ -1010,6 +1234,50 @@ async function generateCoordinationImage(form) {
 
     callsY = blockTableY + tableHeaderHeight + communityBlockRows.length * rowHeight + 56;
   }
+  if (df2BulletinRows.length) {
+    drawFittedText(context, 'BOLETIM', margin, callsY, 360, 34, {
+      color: dark,
+      weight: 700,
+      align: 'left',
+      minSize: 26,
+    });
+    strokeRoundRect(context, margin, callsY + 40, contentWidth, 1, 1, 'rgba(23, 54, 77, 0.2)', 1);
+
+    const bulletinTableY = callsY + 70;
+    fillRoundRect(context, tableX, bulletinTableY, contentWidth, tableHeaderHeight, 22, accentDark);
+    ['NOME', 'HOR\u00c1RIO', 'DURA\u00c7\u00c3O', 'ID'].forEach((label, index) => {
+      const columnX = tableX + columns.slice(0, index).reduce((total, value) => total + value, 0);
+      drawFittedText(context, label, columnX + columns[index] / 2, bulletinTableY + tableHeaderHeight / 2, columns[index] - 28, 23, {
+        color: '#ffffff',
+        weight: 700,
+        minSize: 18,
+      });
+    });
+
+    df2BulletinRows.forEach((bulletin, rowIndex) => {
+      const y = bulletinTableY + tableHeaderHeight + rowIndex * rowHeight;
+      const values = [
+        String(bulletin.name || 'BOLETIM').toUpperCase(),
+        normalizeTimeWithSeconds(bulletin.time) || '--:--:--',
+        formatArtworkDuration(bulletin.duration),
+        bulletin.id || '-',
+      ];
+      fillRoundRect(context, tableX, y + 8, contentWidth, rowHeight - 10, 18, '#e7f4ff');
+      strokeRoundRect(context, tableX, y + 8, contentWidth, rowHeight - 10, 18, 'rgba(0, 126, 214, 0.16)', 2);
+      let columnX = tableX;
+      values.forEach((value, index) => {
+        drawFittedText(context, value, columnX + columns[index] / 2, y + rowHeight / 2 + 3, columns[index] - 28, index === 0 ? 28 : 32, {
+          color: index === 3 ? accentMiddle : dark,
+          weight: 700,
+          minSize: index === 0 ? 20 : 24,
+        });
+        columnX += columns[index];
+      });
+    });
+
+    callsY = bulletinTableY + tableHeaderHeight + df2BulletinRows.length * rowHeight + 56;
+  }
+
   drawFittedText(context, 'CHAMADAS', margin, callsY, 360, 34, {
     color: dark,
     weight: 700,
@@ -1018,8 +1286,6 @@ async function generateCoordinationImage(form) {
   });
   strokeRoundRect(context, margin, callsY + 40, contentWidth, 1, 1, 'rgba(23, 54, 77, 0.2)', 1);
 
-  const columns = [336, 220, 210, 194];
-  const tableX = margin;
   const tableY = callsY + 70;
   fillRoundRect(context, tableX, tableY, contentWidth, tableHeaderHeight, 22, accentDark);
   const headerLabels = ['NOME', 'HOR\u00c1RIO', 'DURA\u00c7\u00c3O', 'ID'];
@@ -1059,7 +1325,8 @@ async function generateCoordinationImage(form) {
   const notesY = tableY + tableHeaderHeight + callRows.length * rowHeight + 38;
   const noteText = data.notes || 'Qualquer altera\u00e7\u00e3o ser\u00e1 informada com anteced\u00eancia.';
   setArtworkFont(context, 30, 400);
-  const noteLines = wrapArtworkText(context, noteText, contentWidth - 82);
+  const noteSegmentLines = getArtworkNoteSegments(data.notesRich, noteText);
+  const noteLines = wrapArtworkSegments(context, noteSegmentLines, contentWidth - 82);
   const notesHeight = Math.max(96, noteLines.length * 40 + 56);
   fillRoundRect(context, margin, notesY - 24, contentWidth, notesHeight, 24, 'rgba(255, 255, 255, 0.82)');
   strokeRoundRect(context, margin, notesY - 24, contentWidth, notesHeight, 24, 'rgba(0, 90, 156, 0.12)', 2);
@@ -1067,14 +1334,7 @@ async function generateCoordinationImage(form) {
   context.beginPath();
   context.arc(margin + 18, notesY + 13, 5, 0, Math.PI * 2);
   context.fill();
-  noteLines.forEach((line, index) => {
-    drawFittedText(context, line, margin + 56, notesY + 14 + index * 40, contentWidth - 82, 30, {
-      color: slate,
-      weight: 400,
-      align: 'left',
-      minSize: 22,
-    });
-  });
+  drawArtworkRichLines(context, noteLines, margin + 56, notesY + 14, contentWidth - 82, 40, slate);
 
   const bottomAccent = context.createLinearGradient(0, height, width, height);
   bottomAccent.addColorStop(0, accentEnd);
@@ -1106,6 +1366,7 @@ function populateProgramFields(form, program, selectedProgram) {
     }
   });
   updateProgramBlockFields(form, normalizedProgram.program);
+  populateNotesEditor(form, normalizedProgram);
   renderBulletinInput(normalizedProgram.bulletin);
   renderCallInputs(normalizedProgram.calls);
 }
@@ -1255,7 +1516,7 @@ function initDisplay() {
           </div>
           <section class="display-section observations-section" aria-label="Observações">
             <h2>OBSERVAÇÕES</h2>
-            <strong>${escapeHtml(program.notes || "Sem observações.")}</strong>
+            <strong>${escapeHtmlWithBreaks(program.notes || "Sem observa??es.")}</strong>
           </section>
         </div>
       `;
@@ -1341,6 +1602,10 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
+}
+
+function escapeHtmlWithBreaks(value) {
+  return escapeHtml(value).replace(/\r\n|\r|\n/g, "<br>");
 }
 
 initCoordination();

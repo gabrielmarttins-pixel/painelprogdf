@@ -196,9 +196,68 @@ textarea {
   resize: vertical;
 }
 
+.notes-editor-field {
+  display: grid;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px;
+  background: var(--soft);
+}
+
+.notes-editor-field > span {
+  color: var(--muted);
+  font-size: 0.83rem;
+  font-weight: 700;
+}
+
+.notes-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.notes-toolbar button {
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0;
+  background: #ffffff;
+  color: var(--ink);
+  font-weight: 800;
+}
+
+.notes-toolbar [data-notes-color]::before {
+  content: "";
+  display: block;
+  width: 18px;
+  height: 18px;
+  margin: 7px auto;
+  border-radius: 999px;
+  background: var(--swatch-color);
+}
+
+.notes-editor {
+  min-height: 128px;
+  border: 1px solid #cfcfcf;
+  border-radius: 6px;
+  padding: 11px 12px;
+  background: #ffffff;
+  color: var(--ink);
+  outline: none;
+  white-space: pre-wrap;
+}
+
+.notes-editor:empty::before {
+  content: attr(data-placeholder);
+  color: var(--muted);
+}
+
 input:focus,
 select:focus,
-textarea:focus {
+textarea:focus,
+.notes-editor:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(0, 107, 95, 0.14);
 }
@@ -516,8 +575,7 @@ textarea:focus {
 
 .display-topbar span,
 .display-topbar strong,
-.display-call-row,
-.observations-section strong {
+.display-call-row {
   font-size: clamp(1.45rem, 2.25vw, 2.25rem);
 }
 
@@ -604,8 +662,10 @@ textarea:focus {
 }
 
 .observations-section strong {
+  font-size: clamp(1rem, 1.45vw, 1.55rem);
   overflow-wrap: anywhere;
   line-height: 1.25;
+  white-space: pre-wrap;
 }
 
 .status-pill {

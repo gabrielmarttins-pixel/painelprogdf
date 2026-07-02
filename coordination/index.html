@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Coordenação | Painel de Programação</title>
     <meta name="description" content="Entrada de informações do Painel de Programação" />
-    <link rel="stylesheet" href="../styles.css?v=58" />
+    <link rel="stylesheet" href="../styles.css?v=64" />
   </head>
   <body>
     <main class="coordination-shell">
@@ -112,10 +112,19 @@
             </div>
           </section>
 
-          <label class="wide-field">
-            <span>OBSERVAÇÕES</span>
-            <textarea name="notes" rows="5" placeholder="Observações para o painel"></textarea>
-          </label>
+          <section class="wide-field notes-editor-field" aria-label="Observa&ccedil;&otilde;es">
+            <span>OBSERVA&Ccedil;&Otilde;ES</span>
+            <div class="notes-toolbar" aria-label="Formata&ccedil;&atilde;o das observa&ccedil;&otilde;es">
+              <button type="button" data-notes-command="bold" aria-label="Negrito">B</button>
+              <button type="button" data-notes-color="#5d6a72" aria-label="Cinza" style="--swatch-color: #5d6a72"></button>
+              <button type="button" data-notes-color="#007ed6" aria-label="Azul" style="--swatch-color: #007ed6"></button>
+              <button type="button" data-notes-color="#ff7a00" aria-label="Laranja" style="--swatch-color: #ff7a00"></button>
+              <button type="button" data-notes-color="#d71964" aria-label="Rosa" style="--swatch-color: #d71964"></button>
+            </div>
+            <div id="notes-editor" class="notes-editor" contenteditable="true" role="textbox" aria-multiline="true" data-placeholder="Observa&ccedil;&otilde;es para o painel"></div>
+            <textarea name="notes" rows="5" hidden></textarea>
+            <input name="notesRich" type="hidden" />
+          </section>
 
         </fieldset>
 
@@ -151,6 +160,6 @@
     </template>
 
     <script src="../config.js?v=32"></script>
-    <script src="../app.js?v=58"></script>
+    <script src="../app.js?v=64"></script>
   </body>
 </html>
