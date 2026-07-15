@@ -60,6 +60,10 @@ body:has(.display-shell)[data-background="globo-esporte"] {
   background-image: url("./assets/GLOBOESPORTE.png");
 }
 
+body:has(.display-shell)[data-background="cmw"] {
+  background-image: url("./assets/CMW_FUNDO.jpg");
+}
+
 body:has(.display-shell) {
   color: #ffffff;
   --ink: #ffffff;
@@ -482,6 +486,15 @@ textarea:focus,
   filter: drop-shadow(0 10px 22px rgba(0, 0, 0, 0.38));
 }
 
+.program-logo-cmw {
+  height: clamp(128px, 22vh, 260px);
+  max-width: min(90vw, 1040px);
+}
+
+body:has(.display-shell)[data-background="cmw"] .bulletin-display-section h2 {
+  color: #ff7c20;
+}
+
 .program-summary {
   display: flex;
   flex-wrap: wrap;
@@ -636,6 +649,10 @@ textarea:focus,
 
 .display-call-row.bulletin-display-row {
   background: rgba(0, 112, 210, 0.34);
+}
+
+body:has(.display-shell)[data-background="cmw"] .display-call-row.bulletin-display-row {
+  background: rgba(255, 124, 32, 0.34);
 }
 
 .display-call-row span,
