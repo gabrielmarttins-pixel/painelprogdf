@@ -3,31 +3,31 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CoordenaÃ§Ã£o | Painel de ProgramaÃ§Ã£o</title>
-    <meta name="description" content="Entrada de informaÃ§Ãµes do Painel de ProgramaÃ§Ã£o" />
-    <link rel="stylesheet" href="../styles.css?v=70" />
+    <title>Coordena&ccedil;&atilde;o | Painel de Programa&ccedil;&atilde;o</title>
+    <meta name="description" content="Entrada de informa&ccedil;&otilde;es do Painel de Programa&ccedil;&atilde;o" />
+    <link rel="stylesheet" href="../styles.css?v=71" />
   </head>
   <body>
     <main class="coordination-shell">
       <header class="coordination-header">
         <img class="brand-mark" src="../assets/PLIMPLIM.png" alt="" aria-hidden="true" />
         <div>
-          <p class="eyebrow">Painel de ProgramaÃ§Ã£o</p>
-          <h1>PREVISÃƒO DE PROGRAMAS</h1>
+          <p class="eyebrow">Painel de Programa&ccedil;&atilde;o</p>
+          <h1>PREVIS&Atilde;O DE PROGRAMAS</h1>
         </div>
         <a class="ghost-link" href="../index.html">Ver painel</a>
       </header>
 
       <section class="status-row single-status" aria-label="Status do preenchimento">
         <div>
-          <span class="status-label">Ãšltima atualizaÃ§Ã£o</span>
-          <strong id="last-update">Ainda nÃ£o salvo</strong>
+          <span class="status-label">&Uacute;ltima atualiza&ccedil;&atilde;o</span>
+          <strong id="last-update">Ainda n&atilde;o salvo</strong>
         </div>
       </section>
 
       <form id="coordination-form" class="input-panel">
         <fieldset class="program-card">
-          <legend>INFORMAÃ‡Ã•ES DO PROGRAMA</legend>
+          <legend>INFORMA&Ccedil;&Otilde;ES DO PROGRAMA</legend>
 
           <label>
             <span>PROGRAMA</span>
@@ -47,12 +47,12 @@
           </label>
 
           <label>
-            <span>HORÃRIO</span>
+            <span>HOR&Aacute;RIO</span>
             <input name="time" type="time" step="1" />
           </label>
 
           <label>
-            <span>PRODUÃ‡ÃƒO</span>
+            <span>PRODU&Ccedil;&Atilde;O</span>
             <input name="production" type="time" step="1" />
           </label>
 
@@ -102,11 +102,11 @@
                 <input data-bulletin-field="name" placeholder="NOME DO BOLETIM" />
               </label>
               <label>
-                <span>DURAÃ‡ÃƒO</span>
+                <span>DURA&Ccedil;&Atilde;O</span>
                 <input data-bulletin-field="duration" type="time" step="1" />
               </label>
               <label>
-                <span>HORÃRIO</span>
+                <span>HOR&Aacute;RIO</span>
                 <input data-bulletin-field="time" type="time" />
               </label>
             </div>
@@ -130,7 +130,7 @@
 
         <div class="actions">
           <button class="secondary-button" type="button" id="clear-panel">Limpar Painel</button>
-          <button class="primary-button" type="submit">Enviar previsÃ£o</button>
+          <button class="primary-button" type="submit">Enviar previs&atilde;o</button>
           <button class="primary-button generate-image-button" type="button" id="generate-image">Gerar imagem</button>
         </div>
         <p class="image-generation-status" id="image-generation-status" role="status" aria-live="polite"></p>
@@ -148,11 +148,11 @@
           <input data-call-field="name" placeholder="NOME DA CHAMADA" />
         </label>
         <label>
-          <span>DURAÃ‡ÃƒO</span>
+          <span>DURA&Ccedil;&Atilde;O</span>
           <input data-call-field="duration" type="time" step="1" />
         </label>
         <label>
-          <span>HORÃRIO</span>
+          <span>HOR&Aacute;RIO</span>
           <input data-call-field="time" type="time" />
         </label>
         <button class="secondary-button icon-button" type="button" data-remove-call aria-label="Remover chamada">X</button>
@@ -160,6 +160,6 @@
     </template>
 
     <script src="../config.js?v=32"></script>
-    <script src="../app.js?v=70"></script>
+    <script src="../app.js?v=71"></script>
   </body>
 </html>

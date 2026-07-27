@@ -519,7 +519,7 @@ function initCoordination() {
       setText("image-generation-status", "Imagem gerada com sucesso.");
     } catch (error) {
       console.error(error);
-      setText("image-generation-status", error.message || "NÃ£o foi possÃ­vel gerar a imagem.");
+      setText("image-generation-status", error.message || "N\u00e3o foi poss\u00edvel gerar a imagem.");
     } finally {
       button.disabled = false;
     }
@@ -584,7 +584,7 @@ function loadCanvasImage(path) {
   return new Promise((resolve, reject) => {
     const image = new Image();
     image.onload = () => resolve(image);
-    image.onerror = () => reject(new Error(`NÃ£o foi possÃ­vel carregar ${path}.`));
+    image.onerror = () => reject(new Error(`N\u00e3o foi poss\u00edvel carregar ${path}.`));
     image.src = new URL(`../${path}`, window.location.href).href;
   });
 }
@@ -601,7 +601,7 @@ async function loadCanvasImage(path) {
       }
     }
     image.onload = () => resolve(image);
-    image.onerror = () => reject(new Error(`Nao foi possivel carregar ${path}.`));
+    image.onerror = () => reject(new Error(`N\u00e3o foi poss\u00edvel carregar ${path}.`));
     image.src = isEmbeddedImage ? path : sourceUrl.href;
   });
 }
@@ -1479,7 +1479,7 @@ function initDisplay() {
       latestData = data;
       const program = data.program;
       document.body.dataset.background = programBackgrounds[program.program] || "";
-      setText("display-updated-at", `Ãšltima atualizaÃ§Ã£o: ${getTimeFromDateTime(data.updatedAt)}`);
+      setText("display-updated-at", `\u00daltima atualiza\u00e7\u00e3o: ${getTimeFromDateTime(data.updatedAt)}`);
 
       if (!hasSavedData()) {
         grid.innerHTML = `
@@ -1506,9 +1506,9 @@ function initDisplay() {
       const card = document.createElement("article");
       card.className = "display-card program-display-card";
       card.innerHTML = `
-        <section class="program-hero" aria-label="InformaÃ§Ãµes do programa">
+        <section class="program-hero" aria-label="Informa\u00e7\u00f5es do programa">
           <div class="program-summary">
-            <span>PRODUÃ‡ÃƒO: ${escapeHtml(program.production || "NÃ£o informado")}</span>
+            <span>PRODU\u00c7\u00c3O: ${escapeHtml(program.production || "N\u00e3o informado")}</span>
             <span aria-hidden="true">|</span>
             <span>BLOCOS: ${escapeHtml(getProgramBlocksDisplay(program))}</span>
           </div>
@@ -1526,9 +1526,9 @@ function initDisplay() {
               ${renderCalls(program.calls)}
             </section>
           </div>
-          <section class="display-section observations-section" aria-label="ObservaÃ§Ãµes">
-            <h2>OBSERVAÃ‡Ã•ES</h2>
-            <strong>${escapeHtmlWithBreaks(program.notes || "Sem observaÃ§Ãµes.")}</strong>
+          <section class="display-section observations-section" aria-label="Observa\u00e7\u00f5es">
+            <h2>OBSERVA\u00c7\u00d5ES</h2>
+            <strong>${escapeHtmlWithBreaks(program.notes || "Sem observa\u00e7\u00f5es.")}</strong>
           </section>
         </div>
       `;
