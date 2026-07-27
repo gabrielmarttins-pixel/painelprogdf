@@ -3,31 +3,31 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Coordenação | Painel de Programação</title>
-    <meta name="description" content="Entrada de informações do Painel de Programação" />
-    <link rel="stylesheet" href="../styles.css?v=68" />
+    <title>CoordenaÃ§Ã£o | Painel de ProgramaÃ§Ã£o</title>
+    <meta name="description" content="Entrada de informaÃ§Ãµes do Painel de ProgramaÃ§Ã£o" />
+    <link rel="stylesheet" href="../styles.css?v=70" />
   </head>
   <body>
     <main class="coordination-shell">
       <header class="coordination-header">
         <img class="brand-mark" src="../assets/PLIMPLIM.png" alt="" aria-hidden="true" />
         <div>
-          <p class="eyebrow">Painel de Programação</p>
-          <h1>PREVISÃO DE PROGRAMAS</h1>
+          <p class="eyebrow">Painel de ProgramaÃ§Ã£o</p>
+          <h1>PREVISÃƒO DE PROGRAMAS</h1>
         </div>
         <a class="ghost-link" href="../index.html">Ver painel</a>
       </header>
 
       <section class="status-row single-status" aria-label="Status do preenchimento">
         <div>
-          <span class="status-label">Última atualização</span>
-          <strong id="last-update">Ainda não salvo</strong>
+          <span class="status-label">Ãšltima atualizaÃ§Ã£o</span>
+          <strong id="last-update">Ainda nÃ£o salvo</strong>
         </div>
       </section>
 
       <form id="coordination-form" class="input-panel">
         <fieldset class="program-card">
-          <legend>INFORMAÇÕES DO PROGRAMA</legend>
+          <legend>INFORMAÃ‡Ã•ES DO PROGRAMA</legend>
 
           <label>
             <span>PROGRAMA</span>
@@ -38,7 +38,6 @@
               <option value="GLOBO ESPORTE">GLOBO ESPORTE</option>
               <option value="DF2">DF2</option>
               <option value="GLOBO COMUNIDADE">GLOBO COMUNIDADE</option>
-              <option value="CAPITAL MOTO WEEK">CAPITAL MOTO WEEK</option>
             </select>
           </label>
 
@@ -48,12 +47,12 @@
           </label>
 
           <label>
-            <span>HORÁRIO</span>
+            <span>HORÃRIO</span>
             <input name="time" type="time" step="1" />
           </label>
 
           <label>
-            <span>PRODUÇÃO</span>
+            <span>PRODUÃ‡ÃƒO</span>
             <input name="production" type="time" step="1" />
           </label>
 
@@ -103,11 +102,11 @@
                 <input data-bulletin-field="name" placeholder="NOME DO BOLETIM" />
               </label>
               <label>
-                <span>DURAÇÃO</span>
+                <span>DURAÃ‡ÃƒO</span>
                 <input data-bulletin-field="duration" type="time" step="1" />
               </label>
               <label>
-                <span>HORÁRIO</span>
+                <span>HORÃRIO</span>
                 <input data-bulletin-field="time" type="time" />
               </label>
             </div>
@@ -131,7 +130,7 @@
 
         <div class="actions">
           <button class="secondary-button" type="button" id="clear-panel">Limpar Painel</button>
-          <button class="primary-button" type="submit">Enviar previsão</button>
+          <button class="primary-button" type="submit">Enviar previsÃ£o</button>
           <button class="primary-button generate-image-button" type="button" id="generate-image">Gerar imagem</button>
         </div>
         <p class="image-generation-status" id="image-generation-status" role="status" aria-live="polite"></p>
@@ -149,11 +148,11 @@
           <input data-call-field="name" placeholder="NOME DA CHAMADA" />
         </label>
         <label>
-          <span>DURAÇÃO</span>
+          <span>DURAÃ‡ÃƒO</span>
           <input data-call-field="duration" type="time" step="1" />
         </label>
         <label>
-          <span>HORÁRIO</span>
+          <span>HORÃRIO</span>
           <input data-call-field="time" type="time" />
         </label>
         <button class="secondary-button icon-button" type="button" data-remove-call aria-label="Remover chamada">X</button>
@@ -161,6 +160,6 @@
     </template>
 
     <script src="../config.js?v=32"></script>
-    <script src="../app.js?v=68"></script>
+    <script src="../app.js?v=70"></script>
   </body>
 </html>
