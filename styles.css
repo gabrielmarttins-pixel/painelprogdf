@@ -830,3 +830,173 @@ textarea:focus,
     align-items: flex-start;
   }
 }
+
+.coordination-header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  align-self: center;
+  gap: 12px;
+}
+.coordination-header-actions > .primary-button,
+.coordination-header-actions > .ghost-link {
+  width: auto;
+  text-align: center;
+}
+#exhibition-status:empty {
+  display: none;
+}
+
+/* Rounded controls throughout the coordination panel. */
+.coordination-shell button,
+.coordination-shell .ghost-link {
+  border-radius: 999px;
+}
+
+/* Globo mini guia: horizontal brand gradients for coordination actions. */
+.coordination-shell {
+  --globo-blue-gradient: linear-gradient(90deg, #05a6ff, #8800f8);
+  --globo-red-gradient: linear-gradient(90deg, #ff0c1f, #8800f8);
+}
+.coordination-shell .primary-button,
+.coordination-shell .secondary-button,
+.coordination-shell .ghost-link {
+  background: var(--globo-blue-gradient);
+  color: #fff;
+  border: 0;
+}
+.coordination-shell #clear-panel {
+  background: var(--globo-red-gradient);
+  color: #fff;
+}
+.coordination-shell button:hover,
+.coordination-shell .ghost-link:hover {
+  filter: brightness(0.92);
+}
+.coordination-shell button:focus-visible,
+.coordination-shell .ghost-link:focus-visible {
+  outline: 2px solid #000;
+  outline-offset: 3px;
+}
+.coordination-shell button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.coordination-shell #add-call,
+.coordination-shell [data-remove-call] {
+  background: #eeeeee;
+  color: var(--ink);
+}
+.coordination-shell input,
+.coordination-shell select,
+.coordination-shell textarea,
+.coordination-shell .notes-editor,
+.coordination-shell .notes-editor-field {
+  border-radius: 16px;
+}
+.coordination-header-actions > .primary-button,
+.coordination-header-actions > .ghost-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 46px;
+  min-height: 46px;
+  margin: 0;
+  padding: 0 18px;
+  font-size: 1rem;
+  font-weight: 800;
+  white-space: nowrap;
+  line-height: 1;
+  box-sizing: border-box;
+}
+.coordination-shell #add-call {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  min-height: 38px;
+  padding: 0;
+  font-size: 0;
+  flex: 0 0 38px;
+}
+.coordination-shell #add-call::before,
+.coordination-shell #add-call::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: currentColor;
+  border-radius: 1px;
+}
+.coordination-shell #add-call::before {
+  width: 12px;
+  height: 2px;
+}
+.coordination-shell #add-call::after {
+  width: 2px;
+  height: 12px;
+}
+
+.coordination-shell .actions .action-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  min-width: 46px;
+  padding: 0;
+  flex-shrink: 0;
+}
+.action-icon-button svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.coordination-shell .program-card {
+  border: 0;
+  min-inline-size: 0;
+}
+
+.coordination-shell .actions {
+  align-items: center;
+}
+.update-status-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  order: -1;
+  margin-right: auto;
+}
+.coordination-shell .actions .generate-image-button {
+  order: 0;
+  margin-right: 0;
+}
+.update-status {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.85rem;
+}
+@media (max-width: 600px) {
+  .update-status-group {
+    width: 100%;
+  }
+}
+
+.coordination-header-actions > .view-panel-button {
+  width: 46px;
+  min-width: 46px;
+  padding: 0;
+  flex-shrink: 0;
+}

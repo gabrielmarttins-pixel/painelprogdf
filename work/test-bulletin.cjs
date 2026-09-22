@@ -1,0 +1,17 @@
+const assert = require('assert/strict');
+const fs = require('fs');
+const {parse} = require('../exhibition-import.js');
+const csv = fs.readFileSync('C:/Users/gamartin/Downloads/Consulta_Analitica_DF_21_09_2026.csv', 'utf8');
+const programs = parse(csv);
+const df2 = programs.find(p => p.program === 'DF2');
+assert.deepEqual(df2.bulletin, { id: 'AO VIVO', name: 'BOLETIM DF2', duration: '00:09:09', time: '17:09:58' });
+assert.equal(df2.production, '00:24:22');
+assert.equal(df2.blocks, '3');
+assert.equal(df2.calls.length, 2);
+assert(programs.filter(p => p.program !== 'DF2').every(p => !p.bulletin));
+const bulletinLine = csv.split(/\r?\n/).find(line => line.startsWith('"SW-2";"BOLETIM DF2"'));
+assert(bulletinLine);
+assert.equal(parse(csv.replace(bulletinLine, '')).find(p => p.program === 'DF2').bulletin, undefined);
+assert.throws(() => parse(csv + '\n' + bulletinLine), /mais de um BOLETIM DF2/);
+assert.deepEqual(parse(csv.replace(bulletinLine, bulletinLine.replace('"PD1"', '"PD"'))).find(p => p.program === 'DF2').bulletin, df2.bulletin);
+console.log('PASS: BOLETIM DF2 importado, segundos preservados, métricas e chamadas do jornal intactas, ausência e ambiguidade verificadas.');

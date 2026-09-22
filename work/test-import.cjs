@@ -1,0 +1,12 @@
+const fs=require('fs'), vm=require('vm'), assert=require('assert/strict');
+const s=fs.readFileSync('app.js','utf8');
+const parse=require('../exhibition-import.js').parse;
+const csv=fs.readFileSync('C:/Users/gamartin/Downloads/Consulta_Analitica_DF_21_09_2026.csv','utf8');
+const data=parse(csv);
+assert.deepEqual(data.map(p=>[p.program,p.production,p.blocks,p.intervals,p.calls.length]),[['BOM DIA DF','02:17:03','5','4',0],['DF1','01:16:51','4','2',4],['GLOBO ESPORTE','00:11:14','2','1',3],['DF2','00:24:22','3','2',2]]);
+assert.equal(data[1].calls[0].time,'10:29:47');
+assert.throws(()=>parse('bad csv'));
+assert.throws(()=>parse(csv.replace('"BOM DIA DF";"BOM DIA DF";"PD1";"00:40:38";"06:00:10";"21/09/2026"','"BOM DIA DF";"BOM DIA DF";"PD1";"00:40:38";"06:00:10";"22/09/2026"')),/mais de uma data/);
+assert.deepEqual(parse(csv.replaceAll(';"CH";', ';"XX";')).map(p=>p.calls.length),[0,0,0,0]);
+const context={document:{getElementById:()=>null},localStorage:{getItem:()=>null,setItem:()=>{}},fetch:()=>{throw Error('NETWORK MUST NOT BE USED')},console};vm.createContext(context);vm.runInContext(s,context);
+(async()=>{await vm.runInContext('saveData(defaults)',context);await vm.runInContext('loadData()',context);console.log('PASS: CSV real, segundos, dados inválidos, múltiplas datas, ausência de chamadas, isolamento de rede.');})().catch(e=>{console.error(e);process.exitCode=1;});

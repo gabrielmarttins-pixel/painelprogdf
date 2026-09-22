@@ -1,6 +1,7 @@
-const STORAGE_KEY = "painel-prog-data";
+const STORAGE_KEY = "painel-prog-laboratorio-data";
+const LABORATORY_MODE = true;
 const SUPABASE_ROW_ID = "current";
-const REMOTE_REFRESH_INTERVAL = 60000;
+const REMOTE_REFRESH_INTERVAL = 120000;
 let remoteConfigPromise;
 
 const defaultCall = {
@@ -21,6 +22,7 @@ const defaults = {
     time: "",
     production: "",
     blocks: "",
+    intervals: "",
     block1: "",
     block2: "",
     notes: "",
@@ -43,7 +45,7 @@ function normalizeProgramEntry(program) {
       ...defaults.program.bulletin,
       ...(program?.bulletin || {}),
     },
-    calls: program?.calls?.length ? program.calls : defaults.program.calls,
+    calls: Array.isArray(program?.calls) ? program.calls : defaults.program.calls,
   };
 }
 
@@ -153,6 +155,7 @@ async function saveApiData(data) {
 }
 
 async function loadData() {
+  if (LABORATORY_MODE) return loadLocalData();
   const apiData = await loadApiData();
   if (apiData) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(apiData));
@@ -192,6 +195,7 @@ function hasSavedData() {
 
 async function saveData(data) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  if (LABORATORY_MODE) return;
 
   try {
     await saveApiData(data);
@@ -435,6 +439,7 @@ function updateProgramBlockFields(form, programName) {
 
   blocksCountField?.classList.toggle("is-hidden", showCommunityBlocks);
   communityBlockFields?.classList.toggle("is-hidden", !showCommunityBlocks);
+  document.querySelector(".intervals-count-field")?.classList.toggle("is-hidden", showCommunityBlocks);
 
   if (showCommunityBlocks && form.elements.blocks) {
     form.elements.blocks.value = "";
@@ -461,6 +466,41 @@ function initCoordination() {
   loadData().then((data) => {
     currentData = data;
     populateCoordinationForm(form, data);
+  });
+
+  const importInput = document.getElementById("exhibition-file");
+  document.getElementById("import-exhibition").addEventListener("click", () => importInput.click());
+  importInput.addEventListener("change", async () => {
+    const file = importInput.files[0];
+    if (!file) return;
+    const button = document.getElementById("import-exhibition");
+    button.disabled = true;
+    setText("exhibition-status", "Lendo base de exibição...");
+    try {
+      if (file.size > 10 * 1024 * 1024) throw new Error("O arquivo deve ter até 10 MB.");
+      const buffer = await file.arrayBuffer();
+      let text;
+      try { text = new TextDecoder("utf-8", { fatal: true }).decode(buffer); }
+      catch { text = new TextDecoder("windows-1252").decode(buffer); }
+      const imported = ExhibitionImport.parse(text);
+      const drafts = { ...currentData.drafts };
+      syncNotesEditor(form, { rewrite: true });
+      const current = readProgramForm(form);
+      if (current.program) drafts[current.program] = current;
+      imported.forEach(entry => {
+        drafts[entry.program] = normalizeProgramEntry({ ...drafts[entry.program], ...entry });
+      });
+      const selected = current.program || imported[0].program;
+      const updated = { ...currentData, drafts, updatedAt: formatDateTime(new Date()) };
+      await saveData(updated);
+      currentData = updated;
+      populateProgramFields(form, drafts[selected], selected);
+      const missing = ["BOM DIA DF", "DF1", "GLOBO ESPORTE", "DF2"].filter(name => !imported.some(p => p.program === name));
+      setText("exhibition-status", file.name + " — " + imported.map(p => p.program + ": " + p.blocks + " blocos, " + p.intervals + " intervalos, " + p.calls.length + " chamadas").join("; ") + ". Rascunhos salvos. Selecione o programa e envie a previsão." + (missing.length ? " Ausentes na base (preservados): " + missing.join(", ") + "." : ""));
+      setText("last-update", updated.updatedAt);
+    } catch (error) {
+      setText("exhibition-status", "Base não importada: " + error.message);
+    } finally { button.disabled = false; importInput.value = ""; }
   });
 
   form.elements.program.addEventListener("change", () => {
@@ -570,6 +610,7 @@ function getCoordinationArtworkData(form) {
     date: form.elements.date.value,
     time: normalizeTimeWithSeconds(form.elements.time.value),
     production: form.elements.production.value,
+    intervals: form.elements.intervals.value,
     blocks: getProgramBlocksFromForm(form),
     block1: form.elements.block1?.value.trim() || "",
     block2: form.elements.block2?.value.trim() || "",
@@ -1372,9 +1413,13 @@ function populateProgramFields(form, program, selectedProgram) {
     program: selectedProgram || program?.program || "",
   });
 
+  const blocksSelect = form.elements.blocks;
+  if (normalizedProgram.blocks && ![...blocksSelect.options].some(option => option.value === normalizedProgram.blocks)) {
+    blocksSelect.add(new Option(normalizedProgram.blocks, normalizedProgram.blocks));
+  }
   Object.entries(normalizedProgram).forEach(([field, value]) => {
     if (field !== "calls" && field !== "bulletin" && form.elements[field]) {
-      form.elements[field].value = field === "time" ? normalizeTimeWithSeconds(value) : value || "";
+      form.elements[field].value = field === "time" ? normalizeTimeWithSeconds(value) : value ?? "";
     }
   });
   updateProgramBlockFields(form, normalizedProgram.program);
@@ -1424,7 +1469,7 @@ function renderCallInputs(calls) {
   const list = document.getElementById("calls-list");
   if (!list) return;
   list.innerHTML = "";
-  (calls?.length ? calls : defaults.program.calls).forEach((call) => addCallInput(call));
+  (Array.isArray(calls) ? calls : defaults.program.calls).forEach((call) => addCallInput(call));
 }
 
 function addCallInput(call = {}) {
@@ -1511,6 +1556,7 @@ function initDisplay() {
             <span>PRODU\u00c7\u00c3O: ${escapeHtml(program.production || "N\u00e3o informado")}</span>
             <span aria-hidden="true">|</span>
             <span>BLOCOS: ${escapeHtml(getProgramBlocksDisplay(program))}</span>
+
           </div>
           ${renderProgramLogo(program.program)}
         </section>

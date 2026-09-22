@@ -1,0 +1,1 @@
+const fs=require('fs');let s=fs.readFileSync('app.js','utf8');s=s.replace(/async function saveData\(data\) \{\r?\n  localStorage.setItem\(STORAGE_KEY, JSON.stringify\(data\)\);/, 'async function saveData(data) {\n  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));\n  if (LABORATORY_MODE) return;');fs.writeFileSync('app.js',s);

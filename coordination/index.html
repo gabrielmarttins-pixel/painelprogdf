@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Coordena&ccedil;&atilde;o | Painel de Programa&ccedil;&atilde;o</title>
     <meta name="description" content="Entrada de informa&ccedil;&otilde;es do Painel de Programa&ccedil;&atilde;o" />
-    <link rel="stylesheet" href="../styles.css?v=71" />
+    <link rel="stylesheet" href="../styles.css?v=84" />
   </head>
   <body>
     <main class="coordination-shell">
@@ -15,19 +15,17 @@
           <p class="eyebrow">Painel de Programa&ccedil;&atilde;o</p>
           <h1>PREVIS&Atilde;O DE PROGRAMAS</h1>
         </div>
-        <a class="ghost-link" href="../index.html">Ver painel</a>
+        <div class="coordination-header-actions">
+          <button type="button" class="primary-button" id="import-exhibition">Conectar Maestro</button>
+          <input type="file" id="exhibition-file" accept=".csv,text/csv" hidden />
+          <a class="ghost-link action-icon-button view-panel-button" href="../index.html" title="Ver painel" aria-label="Ver painel"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></a>
+        </div>
       </header>
 
-      <section class="status-row single-status" aria-label="Status do preenchimento">
-        <div>
-          <span class="status-label">&Uacute;ltima atualiza&ccedil;&atilde;o</span>
-          <strong id="last-update">Ainda n&atilde;o salvo</strong>
-        </div>
-      </section>
+<p id="exhibition-status" role="status" aria-live="polite"></p>
 
       <form id="coordination-form" class="input-panel">
-        <fieldset class="program-card">
-          <legend>INFORMA&Ccedil;&Otilde;ES DO PROGRAMA</legend>
+        <fieldset class="program-card" aria-label="Informações do programa">
 
           <label>
             <span>PROGRAMA</span>
@@ -69,6 +67,11 @@
             </select>
           </label>
 
+          <label class="intervals-count-field">
+            <span>INTERVALOS</span>
+            <input name="intervals" type="number" min="0" step="1" />
+          </label>
+
           <div class="community-block-fields is-hidden">
             <label>
               <span>BLOCO 1</span>
@@ -107,7 +110,7 @@
               </label>
               <label>
                 <span>HOR&Aacute;RIO</span>
-                <input data-bulletin-field="time" type="time" />
+                <input data-bulletin-field="time" type="time" step="1" />
               </label>
             </div>
           </section>
@@ -129,9 +132,16 @@
         </fieldset>
 
         <div class="actions">
-          <button class="secondary-button" type="button" id="clear-panel">Limpar Painel</button>
-          <button class="primary-button" type="submit">Enviar previs&atilde;o</button>
-          <button class="primary-button generate-image-button" type="button" id="generate-image">Gerar imagem</button>
+          <button class="primary-button generate-image-button action-icon-button" type="button" id="generate-image" title="Gerar imagem" aria-label="Gerar imagem"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg></button>
+          <button class="secondary-button action-icon-button" type="button" id="clear-panel" title="Limpar painel" aria-label="Limpar painel"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m15 3 6 6a2 2 0 0 1 0 3l-8 8H7l-4-4a2 2 0 0 1 0-3L12 3a2 2 0 0 1 3 0Z"/><path d="m7 9 8 8M13 20h8"/></svg></button>
+          <button class="primary-button action-icon-button" type="submit" title="Enviar previsão" aria-label="Enviar previsão"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg></button>
+          <div class="update-status-group">
+            
+            <div class="update-status" aria-live="polite">
+              <span class="status-label">&Uacute;ltima atualiza&ccedil;&atilde;o</span>
+              <strong id="last-update">Ainda n&atilde;o salvo</strong>
+            </div>
+          </div>
         </div>
         <p class="image-generation-status" id="image-generation-status" role="status" aria-live="polite"></p>
       </form>
@@ -153,13 +163,14 @@
         </label>
         <label>
           <span>HOR&Aacute;RIO</span>
-          <input data-call-field="time" type="time" />
+          <input data-call-field="time" type="time" step="1" />
         </label>
         <button class="secondary-button icon-button" type="button" data-remove-call aria-label="Remover chamada">X</button>
       </div>
     </template>
 
     <script src="../config.js?v=32"></script>
-    <script src="../app.js?v=71"></script>
+    <script src="../exhibition-import.js?v=5"></script>
+    <script src="../app.js?v=75"></script>
   </body>
 </html>
