@@ -1,5 +1,5 @@
-const STORAGE_KEY = "painel-prog-laboratorio-data";
-const LABORATORY_MODE = true;
+const STORAGE_KEY = "painel-prog-data";
+const LABORATORY_MODE = false;
 const SUPABASE_ROW_ID = "current";
 const REMOTE_REFRESH_INTERVAL = 120000;
 let remoteConfigPromise;
