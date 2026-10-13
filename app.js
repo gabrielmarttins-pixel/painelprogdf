@@ -940,40 +940,7 @@ function rgbToHex(color) {
 }
 
 function getNotesPlainText(html) {
-  const element = document.createElement("div");
-  element.innerHTML = sanitizeNotesHtml(html);
-  const lines = [""];
-
-  function append(text) {
-    lines[lines.length - 1] += text || "";
-  }
-
-  function newline() {
-    if (lines[lines.length - 1] !== "") lines.push("");
-  }
-
-  function walk(node) {
-    if (node.nodeType === Node.TEXT_NODE) {
-      append(node.textContent || "");
-      return;
-    }
-
-    if (node.nodeType !== Node.ELEMENT_NODE) return;
-
-    const tag = node.tagName.toLowerCase();
-    if (tag === "br") {
-      newline();
-      return;
-    }
-
-    const isBlock = tag === "div" || tag === "p";
-    if (isBlock && lines[lines.length - 1] !== "") newline();
-    node.childNodes.forEach(walk);
-    if (isBlock) newline();
-  }
-
-  element.childNodes.forEach(walk);
-  return lines.join("\n").replace(/[ \t]+$/gm, "").replace(/\n+$/g, "");
+  return readNotesSegmentLines(html).map(line => line.map(segment => segment.text).join('')).join('\n');
 }
 
 function populateNotesEditor(form, program) {
@@ -1016,49 +983,47 @@ function initNotesEditor(form) {
   editor.addEventListener("paste", () => setTimeout(() => syncNotesEditor(form, { rewrite: true }), 0));
 }
 
-function getArtworkNoteSegments(html, fallbackText) {
-  const cleanHtml = sanitizeNotesHtml(html || "");
-  const root = document.createElement("div");
-  root.innerHTML = cleanHtml || escapeHtml(fallbackText || "Qualquer altera\u00e7\u00e3o ser\u00e1 informada com anteced\u00eancia.");
+function readNotesSegmentLines(html) {
+  const root = document.createElement('div');
+  root.innerHTML = sanitizeNotesHtml(html || '');
   const lines = [[]];
-
-  function pushText(text, style) {
-    if (!text) return;
-    lines[lines.length - 1].push({ text, ...style });
-  }
-
-  function newline() {
-    if (lines[lines.length - 1].length) lines.push([]);
-  }
-
+  const newline = () => lines.push([]);
   function walk(node, style = {}) {
     if (node.nodeType === Node.TEXT_NODE) {
-      pushText(node.textContent || "", style);
+      const parts = (node.textContent || '').replace(/\r\n?/g, '\n').split('\n');
+      parts.forEach((text, index) => {
+        if (index) newline();
+        if (text) lines[lines.length - 1].push({ text, ...style });
+      });
       return;
     }
     if (node.nodeType !== Node.ELEMENT_NODE) return;
-
     const tag = node.tagName.toLowerCase();
-    if (tag === "br") {
-      newline();
-      return;
-    }
-
+    if (tag === 'br') { newline(); return; }
     const nextStyle = { ...style };
-    if (tag === "strong" || tag === "b") nextStyle.bold = true;
-    const color = (node.style?.color || node.getAttribute?.("color") || "").trim().toLowerCase();
+    if (tag === 'strong' || tag === 'b') nextStyle.bold = true;
+    const color = (node.style?.color || node.getAttribute?.('color') || '').trim().toLowerCase();
     const hexColor = rgbToHex(color) || color;
     if (hexColor) nextStyle.color = hexColor;
-
-    const startsBlock = tag === "div" || tag === "p";
-    if (startsBlock && lines[lines.length - 1].length) newline();
-    node.childNodes.forEach((child) => walk(child, nextStyle));
-    if (startsBlock) newline();
+    const block = tag === 'div' || tag === 'p';
+    if (block && lines[lines.length - 1].length) newline();
+    // A lone BR in an empty editor block is a placeholder for one blank line.
+    const placeholder = block && node.childNodes.length === 1 && node.firstChild?.nodeName === 'BR';
+    if (placeholder) newline();
+    else {
+      node.childNodes.forEach(child => walk(child, nextStyle));
+      if (block && lines[lines.length - 1].length) newline();
+    }
   }
-
-  root.childNodes.forEach((node) => walk(node));
+  root.childNodes.forEach(node => walk(node));
   while (lines.length && !lines[lines.length - 1].length) lines.pop();
-  return lines.length ? lines : [[{ text: fallbackText || "Qualquer altera\u00e7\u00e3o ser\u00e1 informada com anteced\u00eancia." }]];
+  return lines;
+}
+
+function getArtworkNoteSegments(html, fallbackText) {
+  const lines = readNotesSegmentLines(html);
+  if (lines.length) return lines;
+  return readNotesSegmentLines(escapeHtml(fallbackText || 'Qualquer alteração será informada com antecedência.'));
 }
 
 function wrapArtworkSegments(context, segmentLines, maxWidth) {
