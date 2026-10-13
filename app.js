@@ -1034,6 +1034,7 @@ function wrapArtworkSegments(context, segmentLines, maxWidth) {
       return;
     }
     let line = [];
+    line.startsObservation = segments.some(segment => String(segment.text).trim());
     let width = 0;
 
     segments.forEach((segment) => {
@@ -1056,8 +1057,14 @@ function wrapArtworkSegments(context, segmentLines, maxWidth) {
   return wrapped.length ? wrapped : [[{ text: "Qualquer altera\u00e7\u00e3o ser\u00e1 informada com anteced\u00eancia." }]];
 }
 
-function drawArtworkRichLines(context, lines, x, y, maxWidth, lineHeight, fallbackColor) {
+function drawArtworkRichLines(context, lines, x, y, maxWidth, lineHeight, fallbackColor, markerColor) {
   lines.forEach((line, lineIndex) => {
+    if (markerColor && line.startsObservation) {
+      context.fillStyle = markerColor;
+      context.beginPath();
+      context.arc(x - 38, y + lineIndex * lineHeight - 1, 5, 0, Math.PI * 2);
+      context.fill();
+    }
     let cursorX = x;
     line.forEach((segment) => {
       setArtworkFont(context, 30, segment.bold ? 700 : 400);
@@ -1348,11 +1355,7 @@ async function generateCoordinationImage(form) {
   const notesHeight = Math.max(96, noteLines.length * 40 + 56);
   fillRoundRect(context, margin, notesY - 24, contentWidth, notesHeight, 24, 'rgba(255, 255, 255, 0.82)');
   strokeRoundRect(context, margin, notesY - 24, contentWidth, notesHeight, 24, 'rgba(0, 90, 156, 0.12)', 2);
-  context.fillStyle = accentMiddle;
-  context.beginPath();
-  context.arc(margin + 18, notesY + 13, 5, 0, Math.PI * 2);
-  context.fill();
-  drawArtworkRichLines(context, noteLines, margin + 56, notesY + 14, contentWidth - 82, 40, slate);
+  drawArtworkRichLines(context, noteLines, margin + 56, notesY + 14, contentWidth - 82, 40, slate, accentMiddle);
 
   const bottomAccent = context.createLinearGradient(0, height, width, height);
   bottomAccent.addColorStop(0, accentEnd);
