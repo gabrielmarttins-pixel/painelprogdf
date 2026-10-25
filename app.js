@@ -1592,7 +1592,7 @@ function renderBulletin(bulletin, programName) {
 function renderClearedPanel() {
   return `
     <section class="cleared-panel-image" aria-label="Painel limpo">
-      <img src="assets/painel-limpo.jpg?v=20261025" alt="TV Globo DF" />
+      <img src="assets/painel-limpo.jpg?v=20261025b" alt="TV Globo DF" />
     </section>
   `;
 }
