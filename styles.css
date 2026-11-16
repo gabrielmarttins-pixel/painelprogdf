@@ -1000,3 +1000,50 @@ textarea:focus,
   padding: 0;
   flex-shrink: 0;
 }
+
+/* Touch layout: scoped to coordination so TV and exported artwork stay stable. */
+@media (max-width: 760px) {
+  .coordination-shell { width: calc(100% - 24px); padding: 12px 0 max(24px, env(safe-area-inset-bottom)); }
+  .coordination-header { grid-template-columns: 40px minmax(0, 1fr); gap: 12px; padding: 12px 0 20px; }
+  .coordination-header .brand-mark { width: 40px; height: 40px; }
+  .coordination-header h1 { font-size: clamp(1.2rem, 5vw, 1.65rem); line-height: 1.15; }
+  .coordination-header .eyebrow { font-size: 0.65rem; letter-spacing: 0.04em; }
+  .coordination-header-actions { grid-column: 1 / -1; width: 100%; gap: 10px; }
+  .coordination-header-actions > #import-exhibition { flex: 1; min-height: 48px; }
+  .coordination-header-actions > .view-panel-button { width: 48px; height: 48px; min-width: 48px; }
+  .coordination-shell .program-card { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 0; gap: 16px 12px; }
+  .coordination-shell .program-card > label:first-child,
+  .coordination-shell .program-card > label:nth-child(2) { grid-column: 1 / -1; }
+  .coordination-shell label { min-width: 0; }
+  .coordination-shell input,
+  .coordination-shell select,
+  .coordination-shell textarea { min-width: 0; max-width: 100%; min-height: 48px; font-size: 16px; padding: 12px 10px; }
+  .coordination-shell input:focus-visible,
+  .coordination-shell select:focus-visible,
+  .coordination-shell .notes-editor:focus-visible { outline: 2px solid #007ed6; outline-offset: 2px; }
+  .coordination-shell .section-title { grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
+  .coordination-shell #add-call { width: 44px; height: 44px; min-width: 44px; }
+  .coordination-shell .call-row,
+  .coordination-shell .bulletin-row { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 14px; border: 1px solid var(--line); border-radius: 18px; background: var(--soft); gap: 12px; }
+  .coordination-shell .call-row > label:nth-child(1),
+  .coordination-shell .call-row > label:nth-child(2),
+  .coordination-shell .bulletin-row > label:nth-child(1),
+  .coordination-shell .bulletin-row > label:nth-child(2) { grid-column: 1 / -1; }
+  .coordination-shell [data-remove-call] { grid-column: 1 / -1; justify-self: end; width: auto; min-height: 44px; padding: 0 14px; }
+  .coordination-shell [data-remove-call]::after { content: " Remover chamada"; font-size: 0.85rem; }
+  .coordination-shell .notes-editor { font-size: 16px; min-height: 150px; line-height: 1.5; overflow-wrap: anywhere; }
+  .coordination-shell .notes-toolbar button { width: 44px; height: 44px; flex: 0 0 44px; }
+  .coordination-shell .notes-toolbar [data-notes-color]::before { margin: auto; }
+  .coordination-shell .actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; width: 100%; padding-top: 12px; }
+  .coordination-shell .update-status-group { grid-column: 1 / -1; order: -1; width: 100%; margin: 0 0 8px; }
+  .coordination-shell .actions .action-icon-button { width: 100%; min-width: 0; height: auto; min-height: 76px; padding: 10px 4px; flex-direction: column; gap: 8px; }
+  .coordination-shell .actions .action-icon-button::after { content: attr(aria-label); font-size: 0.75rem; line-height: 1.2; text-align: center; }
+  .coordination-shell #exhibition-status,
+  .coordination-shell .image-generation-status { overflow-wrap: anywhere; }
+}
+
+@media (max-width: 360px) {
+  .coordination-shell .program-card,
+  .coordination-shell .call-row,
+  .coordination-shell .bulletin-row { grid-template-columns: minmax(0, 1fr); }
+}
